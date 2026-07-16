@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-vazirmatn), sans-serif;
+}
+
+/* Force pointer cursor on all interactive elements */
+a,
+button,
+[role="button"],
+input[type="button"],
+input[type="submit"],
+input[type="checkbox"],
+input[type="radio"],
+select {
+  cursor: pointer !important;
+}
+
+/* Except when disabled */
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled,
+[role="button"]:disabled,
+.cursor-not-allowed {
+  cursor: not-allowed !important;
+}

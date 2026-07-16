@@ -1,0 +1,6 @@
+{
+  "name": "کاردینو (Cardinow)",
+  "description": "سامانه هوشمند طراحی و مدیریت کارت ویزیت دیجیتال، نمایندگی‌های اختصاصی و پنل‌های پیشرفته آمار و اشتراک متصل به دایرکتوس",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

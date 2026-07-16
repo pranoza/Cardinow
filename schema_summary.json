@@ -1,0 +1,403 @@
+{
+  "card_analytics": {
+    "note": "آمار بازدید کارت‌ها",
+    "fields": {
+      "id": {
+        "type": "uuid",
+        "nullable": false,
+        "is_primary_key": true,
+        "note": null
+      },
+      "card_id": {
+        "type": "uuid",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "device": {
+        "type": "string",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "referrer": {
+        "type": "string",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "country": {
+        "type": "string",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "created_at": {
+        "type": "timestamp",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      }
+    }
+  },
+  "cards": {
+    "note": "کارت‌های ویزیت ساخته شده توسط کاربران",
+    "fields": {
+      "id": {
+        "type": "uuid",
+        "nullable": false,
+        "is_primary_key": true,
+        "note": null
+      },
+      "user_id": {
+        "type": "uuid",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "tenant_id": {
+        "type": "uuid",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "template_id": {
+        "type": "uuid",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "slug": {
+        "type": "string",
+        "nullable": false,
+        "is_primary_key": false,
+        "note": null
+      },
+      "status": {
+        "type": "string",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "profile_image": {
+        "type": "uuid",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "cover_image": {
+        "type": "uuid",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "first_name": {
+        "type": "string",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "last_name": {
+        "type": "string",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "job_title": {
+        "type": "string",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "company": {
+        "type": "string",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "bio": {
+        "type": "text",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "social_links": {
+        "type": "json",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "custom_buttons": {
+        "type": "json",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "custom_colors": {
+        "type": "json",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "custom_css": {
+        "type": "text",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "views_count": {
+        "type": "integer",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "expiry_date": {
+        "type": "timestamp",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      }
+    }
+  },
+  "plans": {
+    "note": "پلن‌های اشتراک تعریف شده توسط نمایندگان",
+    "fields": {
+      "id": {
+        "type": "uuid",
+        "nullable": false,
+        "is_primary_key": true,
+        "note": null
+      },
+      "tenant_id": {
+        "type": "uuid",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "title": {
+        "type": "string",
+        "nullable": false,
+        "is_primary_key": false,
+        "note": null
+      },
+      "price": {
+        "type": "decimal",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "duration_days": {
+        "type": "integer",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "features": {
+        "type": "json",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "is_active": {
+        "type": "boolean",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      }
+    }
+  },
+  "subscriptions": {
+    "note": "اشتراک‌های فعال کاربران",
+    "fields": {
+      "id": {
+        "type": "uuid",
+        "nullable": false,
+        "is_primary_key": true,
+        "note": null
+      },
+      "user_id": {
+        "type": "uuid",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "plan_id": {
+        "type": "uuid",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "status": {
+        "type": "string",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "start_date": {
+        "type": "timestamp",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "end_date": {
+        "type": "timestamp",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      }
+    }
+  },
+  "templates": {
+    "note": "قالب‌های ظاهری کارت ویزیت",
+    "fields": {
+      "id": {
+        "type": "uuid",
+        "nullable": false,
+        "is_primary_key": true,
+        "note": null
+      },
+      "name": {
+        "type": "string",
+        "nullable": false,
+        "is_primary_key": false,
+        "note": null
+      },
+      "slug": {
+        "type": "string",
+        "nullable": false,
+        "is_primary_key": false,
+        "note": null
+      },
+      "thumbnail": {
+        "type": "uuid",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "schema": {
+        "type": "json",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "is_premium": {
+        "type": "boolean",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "is_active": {
+        "type": "boolean",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      }
+    }
+  },
+  "tenants": {
+    "note": "پورتال‌ها و نمایندگان سیستم",
+    "fields": {
+      "id": {
+        "type": "uuid",
+        "nullable": false,
+        "is_primary_key": true,
+        "note": null
+      },
+      "status": {
+        "type": "string",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "name": {
+        "type": "string",
+        "nullable": false,
+        "is_primary_key": false,
+        "note": null
+      },
+      "custom_domain": {
+        "type": "string",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "logo": {
+        "type": "uuid",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "brand_color": {
+        "type": "string",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "settings": {
+        "type": "json",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      }
+    }
+  },
+  "transactions": {
+    "note": "تراکنش‌های مالی درگاه‌ها",
+    "fields": {
+      "id": {
+        "type": "uuid",
+        "nullable": false,
+        "is_primary_key": true,
+        "note": null
+      },
+      "user_id": {
+        "type": "uuid",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "tenant_id": {
+        "type": "uuid",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "amount": {
+        "type": "decimal",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "gateway": {
+        "type": "string",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "authority": {
+        "type": "string",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "ref_id": {
+        "type": "string",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "status": {
+        "type": "string",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      },
+      "payload": {
+        "type": "json",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": null
+      }
+    }
+  }
+}
