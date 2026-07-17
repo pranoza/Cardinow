@@ -9,6 +9,8 @@ import {
   Eye, Calendar, Check, AlertTriangle, ChevronLeft 
 } from 'lucide-react';
 
+const DIRECTUS_BASE_URL = process.env.NEXT_PUBLIC_DIRECTUS_URL || 'https://directus-production-ec98.up.railway.app';
+
 export default function PublicCardPage() {
   const { slug } = useParams();
   const router = useRouter();
@@ -41,7 +43,7 @@ export default function PublicCardPage() {
       try {
         setConnectionError(false);
         let apiCard: Card | null = null;
-        const res = await fetch(`https://directus-production-ec98.up.railway.app/items/cards?filter[slug][_eq]=${encodeURIComponent(slug as string)}`);
+        const res = await fetch(`${DIRECTUS_BASE_URL}/items/cards?filter[slug][_eq]=${encodeURIComponent(slug as string)}`);
         if (res.ok) {
           const json = await res.json();
           apiCard = json?.data?.[0];
@@ -53,7 +55,7 @@ export default function PublicCardPage() {
           
           // Fetch templates dynamically
           try {
-            const templatesRes = await fetch(`https://directus-production-ec98.up.railway.app/items/templates`);
+            const templatesRes = await fetch(`${DIRECTUS_BASE_URL}/items/templates`);
             if (templatesRes.ok) {
               const templJson = await templatesRes.json();
               const templData = templJson?.data || [];
@@ -334,7 +336,7 @@ export default function PublicCardPage() {
 
               {/* Footer Powered By */}
               <div className="text-center pt-8 opacity-40 text-[10px]">
-                <span>قدرت گرفته از سامانه کارت ویزیت دیجیتال دوقلو</span>
+                <span>قدرت گرفته از سامانه کارت ویزیت دیجیتال کاردینو</span>
               </div>
 
             </div>

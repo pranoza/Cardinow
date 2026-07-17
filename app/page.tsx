@@ -122,7 +122,7 @@ export default function LandingPage() {
           <div className="lg:col-span-7 space-y-8 text-center lg:text-right">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-xs font-semibold">
               <Sparkles className="h-3.5 w-3.5" />
-              <span>نسخه ۲.۰: متصل به بک‌اند قدرتمند دایرکتوس (Directus)</span>
+              <span>نسخه ۲.۰: کاملاً تعاملی با مدیریت زنده کدهای QR</span>
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight">
@@ -518,7 +518,7 @@ export default function LandingPage() {
                       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-4 bg-slate-800 rounded-b-2xl z-20"></div>
 
                       {/* Phone Screen Canvas container */}
-                      <div className="flex-grow flex flex-col overflow-y-auto overflow-x-hidden relative scrollbar-hide text-right select-none" dir="rtl">
+                      <div className="flex-grow flex flex-col overflow-y-auto overflow-x-hidden relative scrollbar-hide text-right select-none font-sans" dir="rtl">
                         
                         {/* 1. CLASSIC TEMPLATE PREVIEW */}
                         {isClassic && (
@@ -641,7 +641,7 @@ export default function LandingPage() {
                         {isMinimal && (
                           <div className="w-full min-h-full bg-zinc-50 text-zinc-900 p-4 space-y-4 flex flex-col justify-between">
                             <div className="space-y-4 pt-4">
-                              <div className="flex justify-between items-center text-[8px] opacity-50 font-mono">
+                              <div className="flex justify-between items-center text-[8px] opacity-50 font-sans">
                                 <span>/sara-rad</span>
                                 <span>MINIMAL</span>
                               </div>
@@ -671,7 +671,7 @@ export default function LandingPage() {
                                 <span className="text-[8px] font-bold opacity-40 block">ارتباط سریع</span>
                                 <div className="flex items-center gap-2 py-1 text-[8px] font-medium border-b border-zinc-100">
                                   <span className="p-1 bg-zinc-100 rounded">📞</span>
-                                  <span className="font-mono text-zinc-600">۰۹۱۲۳۴۵۶۷۸۹</span>
+                                  <span className="font-sans text-zinc-600">۰۹۱۲۳۴۵۶۷۸۹</span>
                                 </div>
                                 <div className="flex items-center gap-2 py-1 text-[8px] font-medium border-b border-zinc-100">
                                   <span className="p-1 bg-zinc-100 rounded">💬</span>
@@ -764,8 +764,7 @@ export default function LandingPage() {
                               dir="rtl"
                               style={{ 
                                 backgroundColor: cardBg, 
-                                color: txtColor,
-                                fontFamily: tTypography.font_family || 'iranyekan, Shabnam, Tahoma'
+                                color: txtColor
                               }}
                             >
                               <div className="space-y-4">
@@ -1008,7 +1007,7 @@ export default function LandingPage() {
             </div>
             <div>
               <span className="font-bold text-slate-300 text-sm">سامانه کارت ویزیت دیجیتال کاردینو</span>
-              <p className="text-[10px] text-slate-600">متصل به دایرکتوس (Directus Cloud Portal)</p>
+              <p className="text-[10px] text-slate-600">میزبانی امن داده‌ها با پایداری ۹۹.۹٪</p>
             </div>
           </div>
 

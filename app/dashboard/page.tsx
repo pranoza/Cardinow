@@ -6,7 +6,7 @@ import {
   dbService, authService, initializeDB, Card, Tenant, Template, Plan, Subscription, Transaction, UserSession, CardAnalytics, toUUID
 } from '../../lib/directus';
 import { 
-  Plus, Edit2, Trash2, Globe, ExternalLink, Copy, Check, Eye, Save, 
+  Plus, Edit2, Trash2, Globe, ExternalLink, Copy, Check, Eye, Save, Search, 
   Settings, User, LogOut, LayoutGrid, CreditCard, BarChart2, ShieldCheck, 
   Users, Building, DollarSign, ArrowLeft, Sliders, Smartphone, Palette, 
   Code, Link2, Trash, CheckSquare, Sparkles, HelpCircle, RefreshCw, Star, ArrowRight,
@@ -62,6 +62,7 @@ function DashboardContent() {
   // Template Management States
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
   const [isCreatingTemplate, setIsCreatingTemplate] = useState(false);
+  const [adminCardsSearch, setAdminCardsSearch] = useState<string>('');
 
   const [apiError, setApiError] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -828,6 +829,18 @@ function DashboardContent() {
                   </button>
 
                   <button
+                    onClick={() => setActiveTab('admin-cards')}
+                    className={`w-full py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center gap-2.5 ${
+                      activeTab === 'admin-cards' 
+                      ? 'bg-amber-600 text-white' 
+                      : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                    }`}
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                    نظارت بر کارت‌های ویزیت
+                  </button>
+
+                  <button
                     onClick={() => setActiveTab('admin-transactions')}
                     className={`w-full py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center gap-2.5 ${
                       activeTab === 'admin-transactions' 
@@ -1485,80 +1498,359 @@ function DashboardContent() {
                         <div className="h-1 w-8 rounded-full bg-slate-900"></div>
                       </div>
 
-                      <div className="flex-grow overflow-y-auto pt-4 bg-white text-slate-900">
-                        {/* Simulate rendering */}
-                        <div className="p-4 space-y-5 rtl text-right" style={{ backgroundColor: editingCard.custom_colors?.card_bg || '#ffffff', color: editingCard.custom_colors?.text || '#1e293b' }}>
-                          
-                          {/* Simulated profile avatar */}
-                          <div className="flex flex-col items-center text-center space-y-2 mt-4">
-                            <div className="h-20 w-20 rounded-full border-2 overflow-hidden bg-slate-100 shrink-0" style={{ borderColor: editingCard.custom_colors?.primary || '#3b82f6' }}>
-                              <img 
-                                src={editingCard.profile_image || 'https://picsum.photos/150/150?random=1'} 
-                                alt="avatar" 
-                                className="h-full w-full object-cover"
-                              />
-                            </div>
-                            <div>
-                              <h4 className="font-black text-sm text-slate-900">{editingCard.first_name || 'نام'} {editingCard.last_name || 'خانوادگی'}</h4>
-                              <p className="text-[10px] font-bold" style={{ color: editingCard.custom_colors?.primary || '#3b82f6' }}>{editingCard.job_title || 'سمت شغلی'}</p>
-                              <p className="text-[9px] text-slate-500">{editingCard.company || 'نام برند یا شرکت'}</p>
-                            </div>
-                          </div>
+                      <div className="flex-grow overflow-y-auto bg-slate-900 text-slate-100 flex flex-col font-sans select-none" dir="rtl">
+                        {(() => {
+                          const templateId = editingCard.template_id;
+                          const isClassic = templateId === 'temp-1' || templateId === 'classic' || templateId === '11111111-1111-1111-1111-111111111111';
+                          const isNeonGlass = templateId === 'temp-2' || templateId === 'neon-glass' || templateId === '22222222-2222-2222-2222-222222222222';
+                          const isMinimal = templateId === 'temp-3' || templateId === 'minimal' || templateId === '33333333-3333-3333-3333-333333333333';
+                          const isLuxuryDark = templateId === 'temp-4' || templateId === 'luxury-dark' || templateId === '44444444-4444-4444-4444-444444444444';
 
-                          {/* Bio */}
-                          {editingCard.bio && (
-                            <p className="text-[10px] text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100 leading-relaxed">
-                              {editingCard.bio}
-                            </p>
-                          )}
+                          const primaryColor = editingCard.custom_colors?.primary || '#3b82f6';
+                          const secondaryColor = editingCard.custom_colors?.secondary || '#64748b';
+                          const cardBg = editingCard.custom_colors?.card_bg || '#ffffff';
+                          const textColor = editingCard.custom_colors?.text || '#1e293b';
 
-                          {/* Contact buttons */}
-                          <div className="grid grid-cols-4 gap-1.5 text-center text-[9px] text-slate-500 font-semibold">
-                            <div className="p-1.5 bg-slate-50 rounded-lg">
-                              <Phone className="h-4 w-4 mx-auto text-blue-500 mb-0.5" />
-                              <span>تماس</span>
-                            </div>
-                            <div className="p-1.5 bg-slate-50 rounded-lg">
-                              <Mail className="h-4 w-4 mx-auto text-amber-500 mb-0.5" />
-                              <span>ایمیل</span>
-                            </div>
-                            <div className="p-1.5 bg-slate-50 rounded-lg">
-                              <Send className="h-4 w-4 mx-auto text-sky-400 mb-0.5" />
-                              <span>تلگرام</span>
-                            </div>
-                            <div className="p-1.5 bg-slate-50 rounded-lg">
-                              <MessageCircle className="h-4 w-4 mx-auto text-emerald-500 mb-0.5" />
-                              <span>واتساپ</span>
-                            </div>
-                          </div>
+                          // Check if it is a custom template from Directus (not one of the 4 hardcoded)
+                          const isCustomTemplate = !isClassic && !isNeonGlass && !isMinimal && !isLuxuryDark;
+                          const activeTemplate = templates.find(t => toUUID(t.id) === toUUID(templateId));
 
-                          {/* Save contacts action */}
-                          <button 
-                            type="button"
-                            className="w-full py-2 bg-blue-600 text-white rounded-lg text-[10px] font-bold shadow-md shadow-blue-600/10"
-                            style={{ backgroundColor: editingCard.custom_colors?.primary || '#3b82f6' }}
-                          >
-                            ذخیره مستقیم در مخاطبین گوشی
-                          </button>
+                          return (
+                            <>
+                              {/* Classic Style */}
+                              {isClassic && (
+                                <div className="w-full min-h-full bg-slate-100 text-slate-850 flex flex-col font-sans" style={{ backgroundColor: cardBg, color: textColor }}>
+                                  {/* Cover photo */}
+                                  <div className="h-20 bg-slate-300 relative shrink-0">
+                                    <div className="absolute inset-0 bg-gradient-to-b from-black/10 to-black/30"></div>
+                                    <div className="h-full w-full bg-blue-600/20"></div>
+                                  </div>
 
-                          {/* Custom buttons */}
-                          {(editingCard.custom_buttons || []).length > 0 && (
-                            <div className="space-y-1.5 pt-1">
-                              <span className="text-[9px] text-slate-400 block font-bold">دکمه‌های سفارشی:</span>
-                              {editingCard.custom_buttons?.map((btn) => (
-                                <div 
-                                  key={btn.id}
-                                  className="py-1.5 px-3 rounded-lg border border-slate-200 text-[10px] font-bold flex justify-between bg-white"
-                                  style={{ color: btn.color || '#3b82f6' }}
-                                >
-                                  <span>{btn.label}</span>
-                                  <ChevronLeft className="h-3 w-3" />
+                                  {/* Profile Pic overlapping cover */}
+                                  <div className="px-3 -mt-6 relative z-10 flex justify-between items-end">
+                                    <div className="h-14 w-14 rounded-xl border-2 border-white overflow-hidden shadow-sm bg-white">
+                                      <img 
+                                        src={editingCard.profile_image || 'https://picsum.photos/150/150?random=1'} 
+                                        alt="profile" 
+                                        className="w-full h-full object-cover"
+                                      />
+                                    </div>
+                                    <span className="text-[7px] bg-slate-200/80 px-1.5 py-0.5 rounded-full text-slate-600 font-bold">
+                                      پیش‌نمایش کلاسیک
+                                    </span>
+                                  </div>
+
+                                  {/* Info */}
+                                  <div className="p-3 space-y-3.5 flex-grow">
+                                    <div>
+                                      <h4 className="text-xs font-black" style={{ color: textColor }}>{editingCard.first_name || 'نام'} {editingCard.last_name || 'خانوادگی'}</h4>
+                                      <p className="text-[9px] font-bold mt-0.5" style={{ color: primaryColor }}>{editingCard.job_title || 'سمت شغلی'}</p>
+                                      <p className="text-[8px] opacity-70">{editingCard.company || 'نام برند یا شرکت'}</p>
+                                    </div>
+
+                                    {editingCard.bio && (
+                                      <div className="p-2 bg-white/60 rounded-xl text-[8px] leading-relaxed border border-slate-200/50 opacity-90">
+                                        {editingCard.bio}
+                                      </div>
+                                    )}
+
+                                    {/* Contact grid */}
+                                    <div className="grid grid-cols-4 gap-1.5">
+                                      {['تلفن', 'واتساپ', 'تلگرام', 'اینستا'].map((social, i) => (
+                                        <div key={social} className="flex flex-col items-center justify-center p-1 bg-white/80 rounded-lg border border-slate-100">
+                                          <span className="text-[10px]">{i === 0 ? '📞' : i === 1 ? '💬' : i === 2 ? '✈️' : '📸'}</span>
+                                          <span className="text-[6px] font-bold mt-0.5 text-slate-500">{social}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+
+                                    {/* Custom buttons */}
+                                    {editingCard.custom_buttons && editingCard.custom_buttons.length > 0 && (
+                                      <div className="space-y-1">
+                                        {editingCard.custom_buttons.map((btn) => (
+                                          <div 
+                                            key={btn.id}
+                                            className="p-1.5 bg-white rounded-lg border border-slate-200/50 flex items-center justify-between text-[8px] font-bold"
+                                            style={{ color: btn.color || primaryColor }}
+                                          >
+                                            <span>{btn.label}</span>
+                                            <span className="opacity-30">➔</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
-                              ))}
-                            </div>
-                          )}
+                              )}
 
-                        </div>
+                              {/* Neon Glass Style */}
+                              {isNeonGlass && (
+                                <div className="w-full min-h-full bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-950 text-slate-100 p-3.5 space-y-3.5 flex flex-col justify-between font-sans">
+                                  <div className="space-y-3.5 pt-2 flex-grow">
+                                    <div className="flex justify-between items-center text-[7px]">
+                                      <span className="px-1.5 py-0.5 bg-white/10 rounded-full text-slate-300">
+                                        پیش‌نمایش نئون
+                                      </span>
+                                      <span className="text-purple-400 font-extrabold uppercase text-[6px]">NEON GLASS</span>
+                                    </div>
+
+                                    {/* Profile Visual */}
+                                    <div className="flex flex-col items-center text-center space-y-1.5">
+                                      <div className="relative">
+                                        <div className="absolute -inset-1 rounded-full blur bg-gradient-to-r from-purple-500 to-pink-500 opacity-40 animate-pulse"></div>
+                                        <div className="h-14 w-14 rounded-full border border-white/30 overflow-hidden relative bg-slate-950">
+                                          <img 
+                                            src={editingCard.profile_image || 'https://picsum.photos/150/150?random=1'} 
+                                            alt="profile" 
+                                            className="w-full h-full object-cover"
+                                          />
+                                        </div>
+                                      </div>
+
+                                      <div>
+                                        <h4 className="text-xs font-black text-white">{editingCard.first_name || 'نام'} {editingCard.last_name || 'خانوادگی'}</h4>
+                                        <p className="text-[8px] font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mt-0.5">{editingCard.job_title || 'سمت شغلی'}</p>
+                                      </div>
+                                    </div>
+
+                                    {editingCard.bio && (
+                                      <div className="p-2 bg-white/5 rounded-xl text-[7px] leading-relaxed border border-white/10 text-slate-300">
+                                        {editingCard.bio}
+                                      </div>
+                                    )}
+
+                                    {/* Neon Grid */}
+                                    <div className="grid grid-cols-4 gap-1.5">
+                                      {['تلفن', 'واتساپ', 'تلگرام', 'اینستا'].map((social, i) => (
+                                        <div key={social} className="flex flex-col items-center justify-center p-1 bg-white/5 border border-white/10 rounded-lg">
+                                          <span className="text-[10px]">{i === 0 ? '📞' : i === 1 ? '💬' : i === 2 ? '✈️' : '📸'}</span>
+                                          <span className="text-[6px] font-bold mt-0.5 text-slate-400">{social}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+
+                                    {/* Custom buttons */}
+                                    {editingCard.custom_buttons && editingCard.custom_buttons.length > 0 && (
+                                      <div className="space-y-1">
+                                        {editingCard.custom_buttons.map((btn) => (
+                                          <div 
+                                            key={btn.id}
+                                            className="p-1.5 bg-white/5 border border-white/10 rounded-lg flex items-center justify-between text-[8px] font-bold text-white shadow-sm"
+                                          >
+                                            <span style={{ color: btn.color || '#a855f7' }}>{btn.label}</span>
+                                            <span className="opacity-40">➔</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Minimal Style */}
+                              {isMinimal && (
+                                <div className="w-full min-h-full bg-zinc-50 text-zinc-900 p-3.5 space-y-3.5 flex flex-col justify-between font-sans" style={{ backgroundColor: cardBg, color: textColor }}>
+                                  <div className="space-y-3.5 pt-2 flex-grow">
+                                    <div className="flex justify-between items-center text-[7px] opacity-50 uppercase text-[6px]">
+                                      <span>پیش‌نمایش مینیمال</span>
+                                      <span>MINIMAL</span>
+                                    </div>
+
+                                    {/* Portrait Card */}
+                                    <div className="flex items-center gap-2.5 bg-white p-2.5 rounded-xl border border-zinc-200 shadow-sm" style={{ backgroundColor: cardBg === '#ffffff' ? '#ffffff' : cardBg }}>
+                                      <div className="h-10 w-10 rounded-full overflow-hidden bg-zinc-100 shrink-0">
+                                        <img 
+                                          src={editingCard.profile_image || 'https://picsum.photos/150/150?random=1'} 
+                                          alt="profile" 
+                                          className="w-full h-full object-cover"
+                                        />
+                                      </div>
+                                      <div className="text-right">
+                                        <h4 className="text-xs font-black" style={{ color: textColor }}>{editingCard.first_name || 'نام'} {editingCard.last_name || 'خانوادگی'}</h4>
+                                        <p className="text-[8px] font-bold" style={{ color: primaryColor }}>{editingCard.job_title || 'سمت شغلی'}</p>
+                                        <p className="text-[7px] opacity-60">{editingCard.company || 'نام برند یا شرکت'}</p>
+                                      </div>
+                                    </div>
+
+                                    {editingCard.bio && (
+                                      <p className="text-[7.5px] leading-relaxed opacity-75 border-r-2 border-zinc-300 pr-2" style={{ borderColor: primaryColor }}>
+                                        {editingCard.bio}
+                                      </p>
+                                    )}
+
+                                    {/* Minimal contact list */}
+                                    <div className="space-y-1">
+                                      <span className="text-[7px] font-bold opacity-40 block">ارتباط سریع</span>
+                                      <div className="flex items-center gap-2 py-0.5 text-[8px] border-b border-zinc-100">
+                                        <span className="p-0.5 bg-zinc-100 rounded">📞</span>
+                                        <span className="font-sans opacity-80">{editingCard.social_links?.phone || '۰۹۱۲۳۴۵۶۷۸۹'}</span>
+                                      </div>
+                                    </div>
+
+                                    {/* Custom buttons */}
+                                    {editingCard.custom_buttons && editingCard.custom_buttons.length > 0 && (
+                                      <div className="space-y-1 pt-1">
+                                        {editingCard.custom_buttons.map((btn) => (
+                                          <div 
+                                            key={btn.id}
+                                            className="py-1 px-2 border rounded-md flex items-center justify-between text-[7.5px]"
+                                            style={{ borderColor: primaryColor, color: btn.color || textColor }}
+                                          >
+                                            <span>{btn.label}</span>
+                                            <span>➔</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Luxury VIP Style */}
+                              {isLuxuryDark && (
+                                <div className="w-full min-h-full bg-[#0c0a09] text-amber-100 p-3.5 space-y-3.5 flex flex-col justify-between border border-amber-500/20 font-sans">
+                                  <div className="space-y-3.5 pt-2 flex-grow">
+                                    <div className="flex justify-between items-center text-[7px]">
+                                      <span className="px-1.5 py-0.5 bg-amber-500/10 rounded-full text-amber-400 font-bold border border-amber-500/20">
+                                        پیش‌نمایش لوکس
+                                      </span>
+                                      <span className="text-amber-500">★</span>
+                                    </div>
+
+                                    {/* Centered Luxury Avatar */}
+                                    <div className="flex flex-col items-center text-center space-y-1.5">
+                                      <div className="h-14 w-14 rounded-full border-2 border-amber-500 overflow-hidden shadow-lg p-0.5 bg-[#0c0a09]">
+                                        <img 
+                                          src={editingCard.profile_image || 'https://picsum.photos/150/150?random=1'} 
+                                          alt="profile" 
+                                          className="w-full h-full object-cover rounded-full"
+                                        />
+                                      </div>
+                                      <div>
+                                        <h4 className="text-xs font-black text-amber-100">{editingCard.first_name || 'نام'} {editingCard.last_name || 'خانوادگی'}</h4>
+                                        <p className="text-[8px] font-bold text-amber-400 mt-0.5">{editingCard.job_title || 'سمت شغلی'}</p>
+                                      </div>
+                                    </div>
+
+                                    {editingCard.bio && (
+                                      <p className="text-[7.5px] leading-relaxed text-stone-300 text-center px-1">
+                                        {editingCard.bio}
+                                      </p>
+                                    )}
+
+                                    {/* Luxury Gold Buttons */}
+                                    <div className="grid grid-cols-4 gap-1.5">
+                                      {['تلفن', 'واتساپ', 'تلگرام', 'اینستا'].map((social, i) => (
+                                        <div key={social} className="flex flex-col items-center justify-center p-1 bg-stone-900 border border-amber-500/20 rounded-lg text-amber-300">
+                                          <span className="text-[10px]">{i === 0 ? '📞' : i === 1 ? '💬' : i === 2 ? '✈️' : '📸'}</span>
+                                          <span className="text-[6px] font-bold mt-0.5 text-stone-400">{social}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+
+                                    {/* Custom buttons */}
+                                    {editingCard.custom_buttons && editingCard.custom_buttons.length > 0 && (
+                                      <div className="space-y-1">
+                                        {editingCard.custom_buttons.map((btn) => (
+                                          <div 
+                                            key={btn.id}
+                                            className="p-1.5 bg-stone-900 border border-amber-500/30 rounded-lg flex items-center justify-between text-[8px] font-bold text-amber-300"
+                                          >
+                                            <span>{btn.label}</span>
+                                            <span className="opacity-40">➔</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Fallback Custom Template */}
+                              {isCustomTemplate && (() => {
+                                const tSchema = activeTemplate?.schema || {};
+                                const isDarkTheme = tSchema.theme === 'dark';
+                                const tColors = tSchema.colors || {};
+                                const tLayout = tSchema.layout || {};
+
+                                const pColor = tColors.primary || '#8d5b4c';
+                                const sColor = tColors.secondary || '#f4ece1';
+                                const bColor = tColors.background || '#faf6f0';
+                                const txtColor = tColors.text || '#2d221e';
+                                const txtSecColor = tColors.text_secondary || '#6e5a53';
+                                const customCardBg = isDarkTheme ? '#18181b' : '#ffffff';
+                                
+                                const isCircleAvatar = (tLayout.avatar_shape || 'circle') === 'circle';
+                                const isSplitHeader = tLayout.header_style === 'split';
+
+                                return (
+                                  <div 
+                                    className="w-full min-h-full transition-all p-3.5 space-y-3.5 flex flex-col justify-between text-right font-sans"
+                                    style={{ 
+                                      backgroundColor: customCardBg, 
+                                      color: txtColor
+                                    }}
+                                  >
+                                    <div className="space-y-3.5 flex-grow">
+                                      <div className="flex justify-between items-center text-[7px]">
+                                        <span className="px-1.5 py-0.5 rounded-full text-[6px] font-bold" style={{ backgroundColor: sColor, color: pColor }}>
+                                          {activeTemplate?.name || 'قالب اختصاصی'}
+                                        </span>
+                                      </div>
+
+                                      {isSplitHeader ? (
+                                        <div className="flex items-center gap-2 pb-1.5 border-b border-slate-100">
+                                          <div className="h-10 w-10 overflow-hidden border shrink-0" style={{ borderColor: pColor, borderRadius: isCircleAvatar ? '9999px' : '6px' }}>
+                                            <img 
+                                              src={editingCard.profile_image || 'https://picsum.photos/150/150?random=1'} 
+                                              alt="profile" 
+                                              className="w-full h-full object-cover"
+                                            />
+                                          </div>
+                                          <div>
+                                            <h4 className="text-[10px] font-black">{editingCard.first_name || 'نام'} {editingCard.last_name || 'خانوادگی'}</h4>
+                                            <p className="text-[8px] font-bold" style={{ color: pColor }}>{editingCard.job_title || 'سمت شغلی'}</p>
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <div className="flex flex-col items-center text-center space-y-1.5">
+                                          <div className="h-12 w-12 overflow-hidden border p-0.5" style={{ borderColor: pColor, borderRadius: isCircleAvatar ? '9999px' : '8px' }}>
+                                            <img 
+                                              src={editingCard.profile_image || 'https://picsum.photos/150/150?random=1'} 
+                                              alt="profile" 
+                                              className="w-full h-full object-cover"
+                                              style={{ borderRadius: isCircleAvatar ? '9999px' : '6px' }}
+                                            />
+                                          </div>
+                                          <div>
+                                            <h4 className="text-[10px] font-black">{editingCard.first_name || 'نام'} {editingCard.last_name || 'خانوادگی'}</h4>
+                                            <p className="text-[8px] font-bold mt-0.5" style={{ color: pColor }}>{editingCard.job_title || 'سمت شغلی'}</p>
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      {editingCard.bio && (
+                                        <p className="text-[7.5px] leading-relaxed text-center" style={{ color: txtSecColor }}>
+                                          {editingCard.bio}
+                                        </p>
+                                      )}
+
+                                      {/* Mini Contact Buttons */}
+                                      <div className="grid grid-cols-4 gap-1.5 pt-2">
+                                        {['تلفن', 'واتساپ', 'تلگرام', 'سایت'].map((social, i) => (
+                                          <div key={social} className="flex flex-col items-center justify-center p-1 rounded-md border text-[7px]" style={{ borderColor: sColor, backgroundColor: isDarkTheme ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)' }}>
+                                            <span className="text-[9px]">{i === 0 ? '📞' : i === 1 ? '💬' : i === 2 ? '✈️' : '📸'}</span>
+                                            <span className="text-[5.5px] font-bold mt-0.5" style={{ color: txtSecColor }}>{social}</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })()}
+                            </>
+                          );
+                        })()}
                       </div>
                     </div>
                   </div>
@@ -2072,7 +2364,7 @@ function DashboardContent() {
           {user.role === 'admin' && activeTab === 'admin-transactions' && (
             <div className="space-y-6">
               <div className="border-b border-slate-800 pb-5">
-                <h2 className="text-xl font-bold text-white">گزارش امور مالی و درآمد کل سامانه دوقلو</h2>
+                <h2 className="text-xl font-bold text-white">گزارش امور مالی و درآمد کل سامانه کاردینو</h2>
                 <p className="text-xs text-slate-400 mt-1">مشاهده تمامی پرداخت‌های ثبت‌شده مشتریان درگاه‌های کل کشور به تفکیک پرتال.</p>
               </div>
 
@@ -2093,7 +2385,7 @@ function DashboardContent() {
                       return (
                         <tr key={tx.id} className="hover:bg-slate-900/40">
                           <td className="p-3 font-bold">{tx.amount.toLocaleString('fa-IR')} تومان</td>
-                          <td className="p-3">{associatedTenant?.name || 'سایت اصلی دوقلو'}</td>
+                          <td className="p-3">{associatedTenant?.name || 'سایت اصلی کاردینو'}</td>
                           <td className="p-3">{tx.gateway}</td>
                           <td className="p-3 font-mono">{tx.ref_id}</td>
                           <td className="p-3 opacity-70">{tx.created_at.split('T')[0]}</td>
@@ -2113,7 +2405,7 @@ function DashboardContent() {
             <div className="space-y-6">
               <div className="border-b border-slate-800 pb-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                  <h2 className="text-xl font-bold text-white">مدیریت قالب‌های اختصاصی دوقلو (Directus Templates)</h2>
+                  <h2 className="text-xl font-bold text-white">مدیریت قالب‌های اختصاصی کاردینو</h2>
                   <p className="text-xs text-slate-400 mt-1">ایجاد و تنظیم قالب‌های کاملاً داینامیک بر اساس ساختار JSON Schema.</p>
                 </div>
                 {!editingTemplate && (
@@ -2652,6 +2944,152 @@ function DashboardContent() {
             </div>
           )}
 
+          {/* ==============================================
+              ADMIN MODE: ALL CARDS MONITORING TAB
+             ============================================== */}
+          {user.role === 'admin' && activeTab === 'admin-cards' && (() => {
+            const filteredAdminCards = cards.filter(card => {
+              const term = adminCardsSearch.toLowerCase().trim();
+              if (!term) return true;
+              return (
+                card.first_name?.toLowerCase().includes(term) ||
+                card.last_name?.toLowerCase().includes(term) ||
+                card.job_title?.toLowerCase().includes(term) ||
+                card.company?.toLowerCase().includes(term) ||
+                card.slug?.toLowerCase().includes(term)
+              );
+            });
+
+            return (
+              <div className="space-y-6">
+                <div className="border-b border-slate-800 pb-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <div>
+                    <h2 className="text-xl font-bold text-white">نظارت و مدیریت کارت‌های ویزیت دیجیتال کاربران</h2>
+                    <p className="text-xs text-slate-400 mt-1">مشاهده، فیلتر و حذف تمامی کارت‌های ساخته‌شده در کل سامانه کاردینو.</p>
+                  </div>
+                  <div className="text-xs bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 font-bold text-slate-300">
+                    تعداد کل کارت‌ها: <span className="text-blue-400">{cards.length}</span>
+                  </div>
+                </div>
+
+                {/* Search Bar */}
+                <div className="relative">
+                  <span className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-500">
+                    <Search className="h-4 w-4" />
+                  </span>
+                  <input
+                    type="text"
+                    value={adminCardsSearch}
+                    onChange={(e) => setAdminCardsSearch(e.target.value)}
+                    placeholder="جستجو در نام، نام خانوادگی، شغل، شرکت یا آدرس Slug کارت..."
+                    className="w-full pr-10 pl-4 py-3 bg-slate-950 border border-slate-850 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition"
+                  />
+                </div>
+
+                {filteredAdminCards.length === 0 ? (
+                  <div className="text-center py-12 border border-dashed border-slate-800 rounded-3xl space-y-3">
+                    <LayoutGrid className="h-10 w-10 text-slate-600 mx-auto" />
+                    <p className="text-slate-500 text-xs font-bold">هیچ کارت ویزیتی با این مشخصات یافت نشد!</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {filteredAdminCards.map((card) => {
+                      const template = templates.find(t => toUUID(t.id) === toUUID(card.template_id));
+                      const cardTenant = tenants.find(t => toUUID(t.id) === toUUID(card.tenant_id));
+                      return (
+                        <div 
+                          key={card.id} 
+                          className="bg-slate-950 border border-slate-850 rounded-2xl overflow-hidden p-4 flex flex-col justify-between gap-4 hover:border-blue-500/40 transition"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="h-12 w-12 rounded-xl bg-slate-900 border border-slate-800 overflow-hidden shrink-0">
+                              <img 
+                                src={card.profile_image || 'https://picsum.photos/150/150?random=1'} 
+                                alt="avatar" 
+                                className="h-full w-full object-cover"
+                              />
+                            </div>
+
+                            <div className="space-y-1 min-w-0 flex-1">
+                              <div className="flex items-center justify-between gap-2">
+                                <h3 className="font-bold text-white text-xs truncate">{card.first_name} {card.last_name}</h3>
+                                <span className={`px-2 py-0.5 rounded-full text-[8px] font-black shrink-0 ${
+                                  card.status === 'published' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'
+                                }`}>
+                                  {card.status === 'published' ? 'انتشار' : 'پیش‌نویس'}
+                                </span>
+                              </div>
+                              <p className="text-[10px] text-blue-400 font-semibold truncate">{card.job_title || 'بدون عنوان شغلی'}</p>
+                              <p className="text-[9px] text-slate-500 truncate">{card.company || 'نام سازمان ثبت نشده'}</p>
+                            </div>
+                          </div>
+
+                          <div className="py-2.5 border-t border-b border-slate-900 flex flex-col gap-1.5 text-[10px] text-slate-400">
+                            <div className="flex justify-between">
+                              <span>آدرس اختصاصی:</span>
+                              <span className="font-mono text-blue-400 font-bold">{card.slug}/</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>قالب ظاهری:</span>
+                              <span className="text-slate-200 font-bold">{template?.name || 'کلاسیک'}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>نماینده / پرتال:</span>
+                              <span className="text-amber-500 font-bold">{cardTenant?.name || 'سایت اصلی کاردینو'}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>آمار بازدید:</span>
+                              <span className="text-emerald-400 font-bold">{card.views_count?.toLocaleString('fa-IR') || 0} بازدید</span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 pt-1">
+                            <button
+                              onClick={() => {
+                                setEditingCard(card);
+                                setActiveTab('cards');
+                              }}
+                              className="flex-1 py-1.5 bg-slate-900 hover:bg-slate-850 rounded-lg text-[9px] font-bold border border-slate-800 hover:border-slate-750 transition flex items-center justify-center gap-1"
+                            >
+                              <Edit2 className="h-2.5 w-2.5 text-blue-400" />
+                              ویرایش
+                            </button>
+
+                            <button
+                              onClick={() => handleCopyCardLink(card.slug)}
+                              className="p-1.5 bg-slate-900 hover:bg-slate-850 rounded-lg border border-slate-800 hover:border-slate-750 transition"
+                              title="کپی لینک کارت"
+                            >
+                              {isCopiedSlug === card.slug ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+                            </button>
+
+                            <a
+                              href={`/card/${card.slug}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="p-1.5 bg-slate-900 hover:bg-slate-850 rounded-lg border border-slate-800 hover:border-slate-750 transition text-blue-400"
+                              title="مشاهده آنلاین"
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+
+                            <button
+                              onClick={() => handleDeleteCard(card.id)}
+                              className="p-1.5 bg-slate-900 hover:bg-red-950/20 rounded-lg border border-slate-800 hover:border-red-900/30 transition text-red-400"
+                              title="حذف دائمی کارت"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
         </main>
 
       </div>
@@ -2664,7 +3102,7 @@ export default function DashboardPage() {
     <Suspense fallback={
       <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-6 rtl" dir="rtl">
         <RefreshCw className="h-10 w-10 text-blue-500 animate-spin" />
-        <span className="mt-4 text-slate-400 text-sm font-semibold">در حال بارگذاری پنل دوقلو...</span>
+        <span className="mt-4 text-slate-400 text-sm font-semibold">در حال بارگذاری پنل کاردینو...</span>
       </div>
     }>
       <DashboardContent />

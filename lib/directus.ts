@@ -127,7 +127,7 @@ export interface AppUser {
 }
 
 // Directus API Base URL
-const DIRECTUS_BASE_URL = 'https://directus-production-ec98.up.railway.app';
+const DIRECTUS_BASE_URL = process.env.NEXT_PUBLIC_DIRECTUS_URL || 'https://directus-production-ec98.up.railway.app';
 
 // SEED DATA
 const SEED_TENANTS: Tenant[] = [
@@ -954,7 +954,7 @@ export const authService = {
     const session: UserSession = {
       id: profile.id,
       email: profile.email,
-      name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'کاربر دوقلو',
+      name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'کاربر کاردینو',
       role: resolvedRole,
       tenant_id: profile.tenant_id || toUUID('t-1')
     };
