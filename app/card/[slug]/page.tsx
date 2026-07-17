@@ -19,6 +19,7 @@ export default function PublicCardPage() {
   const [copied, setCopied] = useState(false);
   const [isVCardGenerated, setIsVCardGenerated] = useState(false);
   const [connectionError, setConnectionError] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!slug) return;
@@ -75,20 +76,38 @@ export default function PublicCardPage() {
           } catch (e) {
             console.warn('Failed to fetch templates:', e);
           }
+          setIsLoading(false);
           return;
         }
-        throw new Error('Card not found on Directus server');
+        
+        // Card was not found (status 200 but empty array), so not a network error, just doesn't exist
+        setIsLoading(false);
       } catch (err) {
         console.warn('Direct Directus fetch failed.', err);
         setConnectionError(true);
+        setIsLoading(false);
       }
     };
     setTimeout(loadCard, 0);
   }, [slug]);
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-6 rtl font-sans" dir="rtl" style={{ fontFamily: 'var(--font-vazirmatn), sans-serif' }}>
+        <div className="text-center space-y-4">
+          <div className="relative flex items-center justify-center">
+            <div className="h-14 w-14 rounded-full border-4 border-slate-800 border-t-amber-500 animate-spin"></div>
+            <div className="absolute h-8 w-8 bg-amber-500/10 rounded-full animate-ping"></div>
+          </div>
+          <p className="text-xs font-semibold text-slate-400">در حال بارگذاری کارت ویزیت کاردینو...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (connectionError) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-6 rtl" dir="rtl">
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-6 rtl font-sans" dir="rtl" style={{ fontFamily: 'var(--font-vazirmatn), sans-serif' }}>
         <div className="text-center space-y-4 max-w-md bg-slate-900 border border-red-500/20 p-8 rounded-3xl shadow-xl">
           <div className="h-16 w-16 bg-red-500/10 text-red-400 flex items-center justify-center rounded-full mx-auto shadow-inner animate-bounce">
             <AlertTriangle className="h-8 w-8" />
@@ -110,16 +129,16 @@ export default function PublicCardPage() {
 
   if (!card) {
     return (
-      <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col items-center justify-center p-6 rtl" dir="rtl">
-        <div className="text-center space-y-4 max-w-md">
-          <AlertTriangle className="h-16 w-16 text-amber-500 mx-auto" />
-          <h1 className="text-2xl font-bold">کارت ویزیت یافت نشد!</h1>
-          <p className="text-slate-400 text-sm">
-            متأسفانه کارت ویزیت دیجیتال با آدرس <span className="font-mono text-amber-400">/{slug}</span> وجود ندارد یا توسط مالک آن غیرفعال شده است.
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-6 rtl font-sans" dir="rtl" style={{ fontFamily: 'var(--font-vazirmatn), sans-serif' }}>
+        <div className="text-center space-y-4 max-w-md bg-slate-900 border border-slate-800/30 p-8 rounded-3xl shadow-xl">
+          <AlertTriangle className="h-14 w-14 text-amber-500 mx-auto animate-pulse" />
+          <h1 className="text-xl font-bold">کارت ویزیت یافت نشد!</h1>
+          <p className="text-slate-400 text-xs leading-relaxed">
+            متأسفانه کارت ویزیت دیجیتال با آدرس <span className="font-mono text-amber-400 font-bold">/{slug}</span> وجود ندارد یا توسط مالک آن غیرفعال شده است.
           </p>
           <button 
             onClick={() => router.push('/')}
-            className="mt-4 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl transition font-medium w-full text-sm"
+            className="mt-4 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl transition font-medium w-full text-xs"
           >
             برگشت به صفحه اصلی
           </button>
@@ -177,7 +196,7 @@ export default function PublicCardPage() {
   const templateId = card.template_id;
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-0 sm:p-4 rtl text-right" dir="rtl" style={{ backgroundColor: bgColor }}>
+    <div className="min-h-screen flex items-center justify-center p-0 sm:p-4 rtl text-right font-sans" dir="rtl" style={{ backgroundColor: bgColor, fontFamily: 'var(--font-vazirmatn), sans-serif' }}>
       {/* Dynamic Injecting Custom CSS */}
       {card.custom_css && (
         <style dangerouslySetInnerHTML={{ __html: card.custom_css }} />
@@ -624,7 +643,7 @@ export default function PublicCardPage() {
                 />
               </div>
               <div>
-                <h1 className="text-2xl font-bold tracking-wider text-white" style={{ fontFamily: 'iranyekan, Tahoma' }}>{card.first_name} {card.last_name}</h1>
+                <h1 className="text-2xl font-bold tracking-wider text-white">{card.first_name} {card.last_name}</h1>
                 <p className="text-xs uppercase tracking-widest text-[#e2b53e] font-semibold mt-1">{card.job_title}</p>
                 <p className="text-[11px] opacity-60 mt-0.5">{card.company}</p>
               </div>
@@ -753,7 +772,7 @@ export default function PublicCardPage() {
               style={{ 
                 backgroundColor: cardBg, 
                 color: txtColor,
-                fontFamily: tTypography.font_family || 'iranyekan, Shabnam, Tahoma'
+                fontFamily: 'var(--font-vazirmatn), sans-serif'
               }}
             >
               {/* Header Section */}
