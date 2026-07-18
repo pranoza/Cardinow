@@ -9,7 +9,9 @@ import {
   Eye, Calendar, Check, AlertTriangle, ChevronLeft 
 } from 'lucide-react';
 
-const DIRECTUS_BASE_URL = process.env.NEXT_PUBLIC_DIRECTUS_URL || 'https://directus-production-ec98.up.railway.app';
+const DIRECTUS_BASE_URL = typeof window !== 'undefined'
+  ? '/api/directus'
+  : (process.env.NEXT_PUBLIC_DIRECTUS_URL || 'https://directus-production-ec98.up.railway.app');
 
 export default function PublicCardPage() {
   const { slug } = useParams();

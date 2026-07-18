@@ -127,7 +127,9 @@ export interface AppUser {
 }
 
 // Directus API Base URL
-const DIRECTUS_BASE_URL = process.env.NEXT_PUBLIC_DIRECTUS_URL || 'https://directus-production-ec98.up.railway.app';
+const DIRECTUS_BASE_URL = typeof window !== 'undefined'
+  ? '/api/directus'
+  : (process.env.NEXT_PUBLIC_DIRECTUS_URL || 'https://directus-production-ec98.up.railway.app');
 
 // SEED DATA
 const SEED_TENANTS: Tenant[] = [

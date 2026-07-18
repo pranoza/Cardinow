@@ -110,8 +110,8 @@ function DashboardContent() {
         }
       }
     } catch (err: any) {
-      console.error('Error fetching Directus data for dashboard:', err);
-      setApiError('عدم اتصال به پایگاه داده آنلاین دایرکتوس. لطفاً مطمئن شوید که سرور دایرکتوس شما فعال است و دسترسی‌های Public برای کالکشن‌ها به درستی تنظیم شده باشند.');
+      console.error('Error fetching data for dashboard:', err);
+      setApiError('عدم اتصال به پایگاه داده آنلاین. لطفاً مطمئن شوید که اتصال اینترنت برقرار است و سرور به درستی اجرا می‌شود.');
     } finally {
       setIsSyncing(false);
     }
@@ -259,7 +259,7 @@ function DashboardContent() {
       setCardSuccess('کارت ویزیت جدید با موفقیت ایجاد شد و وارد حالت ویرایش شدید.');
       await refreshData();
     } catch (err: any) {
-      setCardError('خطا در اتصال به دایرکتوس هنگام ساخت کارت جدید: ' + err.message);
+      setCardError('خطا در اتصال به پایگاه داده هنگام ساخت کارت جدید: ' + err.message);
     } finally {
       setIsCreatingCard(false);
     }
@@ -273,10 +273,10 @@ function DashboardContent() {
     try {
       await dbService.saveCard(editingCard);
       setEditingCard(null);
-      setCardSuccess('تغییرات کارت ویزیت با موفقیت در دیتابیس دایرکتوس ذخیره شد.');
+      setCardSuccess('تغییرات کارت ویزیت با موفقیت در دیتابیس ذخیره شد.');
       await refreshData();
     } catch (err: any) {
-      setCardError('خطا در اتصال به دایرکتوس هنگام ذخیره‌سازی کارت: ' + err.message);
+      setCardError('خطا در اتصال به سرور هنگام ذخیره‌سازی کارت: ' + err.message);
     } finally {
       setIsSavingCard(false);
     }
@@ -289,7 +289,7 @@ function DashboardContent() {
         if (editingCard?.id === cardId) setEditingCard(null);
         await refreshData();
       } catch (err: any) {
-        alert('خطا در اتصال به دایرکتوس هنگام حذف کارت: ' + err.message);
+        alert('خطا در اتصال به سرور هنگام حذف کارت: ' + err.message);
       }
     }
   };
@@ -375,7 +375,7 @@ function DashboardContent() {
         alert(`پرداخت مبلغ ${payingPlan.price.toLocaleString('fa-IR')} تومان با موفقیت در درگاه شبیه‌سازی شده تراکنش تایید و اشتراک شما فعال گردید!`);
       } catch (err: any) {
         setIsProcessingPayment(false);
-        alert('خطا در ثبت اشتراک و تراکنش در دایرکتوس: ' + err.message);
+        alert('خطا در ثبت اشتراک و تراکنش در سیستم: ' + err.message);
       }
     }, 1500);
   };
@@ -388,7 +388,7 @@ function DashboardContent() {
       await refreshData();
       alert('تنظیمات برند و نمایندگی شما با موفقیت ذخیره گردید و روی پورتال شما اعمال شد.');
     } catch (err: any) {
-      alert('خطا در ذخیره‌سازی تنظیمات برند در دایرکتوس: ' + err.message);
+      alert('خطا در ذخیره‌سازی تنظیمات برند در سیستم: ' + err.message);
     }
   };
 
@@ -413,7 +413,7 @@ function DashboardContent() {
       setEditingPlan(null);
       await refreshData();
     } catch (err: any) {
-      alert('خطا در ذخیره‌سازی پلن نمایندگی در دایرکتوس: ' + err.message);
+      alert('خطا در ذخیره‌سازی پلن نمایندگی در سیستم: ' + err.message);
     }
   };
 
@@ -437,7 +437,7 @@ function DashboardContent() {
             <div className="space-y-4">
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-xs font-semibold">
                 <Sparkles className="h-3.5 w-3.5" />
-                <span>اتصال ابری امن به دایرکتوس</span>
+                <span>اتصال ابری امن و پایدار</span>
               </div>
               <h2 className="text-3xl font-black text-white">کاردینو (Cardinow)</h2>
               <p className="text-slate-400 text-xs leading-relaxed">
@@ -647,7 +647,7 @@ function DashboardContent() {
             </div>
             <div>
               <span className="text-sm font-bold block text-white">پنل هوشمند مدیریت کاردینو</span>
-              <p className="text-[10px] text-slate-400 font-medium">متصل به سرور دایرکتوس</p>
+              <p className="text-[10px] text-slate-400 font-medium">پایگاه داده آنلاین امن و پویا</p>
             </div>
           </div>
 
@@ -848,7 +848,7 @@ function DashboardContent() {
               )
             ) : (
               <div className="p-3 bg-slate-950 rounded-xl text-slate-400 leading-relaxed text-[10px]">
-                پورتال مدیریتی فعال با دسترسی کامل به کالکشن‌های دایرکتوس.
+                پورتال مدیریتی فعال با دسترسی کامل به ابزارهای ویرایش هوشمند.
               </div>
             )}
           </div>
@@ -899,7 +899,7 @@ function DashboardContent() {
                 </div>
 
                 <div className="p-3 bg-blue-500/10 rounded-xl border border-blue-500/20 text-[10px] text-blue-400 leading-relaxed">
-                  ⚠️ این یک تراکنش شبیه‌سازی شده کامل است که اطلاعات خرید را در جدول تراکنش‌ها و اشتراک‌های فعال دایرکتوس ثبت می‌کند تا فرایند برنامه ۱۰۰٪ آزمایش شود. هیچ پول واقعی کسر نمی‌شود.
+                  ⚠️ این یک تراکنش شبیه‌سازی شده کامل است که اطلاعات خرید را در جدول تراکنش‌ها و اشتراک‌های فعال سیستم ثبت می‌کند تا فرایند برنامه ۱۰۰٪ آزمایش شود. هیچ پول واقعی کسر نمی‌شود.
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 pt-3">
@@ -2067,7 +2067,7 @@ function DashboardContent() {
 
                 <div className="space-y-4 bg-slate-950 p-5 rounded-2xl border border-slate-850 flex flex-col justify-between">
                   <div className="space-y-3">
-                    <span className="text-xs font-bold text-white block">وضعیت نمایندگی در دایرکتوس</span>
+                    <span className="text-xs font-bold text-white block">وضعیت نمایندگی در سیستم</span>
                     <div className="flex items-center gap-2">
                       <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-ping"></span>
                       <span className="font-bold text-emerald-400">نمایندگی فعال و مجاز به فروش اشتراک</span>
@@ -2202,7 +2202,7 @@ function DashboardContent() {
                       onClick={handleSavePlan}
                       className="py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 font-bold text-white"
                     >
-                      ثبت نهایی پلن در دایرکتوس
+                      ثبت نهایی پلن در سیستم
                     </button>
                   </div>
                 </div>
@@ -2297,7 +2297,7 @@ function DashboardContent() {
                               await refreshData();
                               alert('وضعیت تایید و دسترسی نماینده تغییر یافت.');
                             } catch (err: any) {
-                              alert('خطا در ثبت وضعیت نماینده در دایرکتوس: ' + err.message);
+                              alert('خطا در ثبت وضعیت نماینده در سیستم: ' + err.message);
                             }
                           }}
                           className="flex-grow py-2 bg-slate-900 hover:bg-slate-850 rounded-xl text-[10px] font-bold border border-slate-800 transition text-amber-400"
@@ -2712,7 +2712,7 @@ function DashboardContent() {
                           try {
                             await dbService.saveTemplate(editingTemplate);
                             await refreshData();
-                            alert('قالب با موفقیت در پایگاه داده دایرکتوس ذخیره شد!');
+                            alert('قالب با موفقیت در پایگاه داده ذخیره شد!');
                             setEditingTemplate(null);
                           } catch (err: any) {
                             alert('خطا در ذخیره قالب: ' + err.message);
@@ -2721,7 +2721,7 @@ function DashboardContent() {
                         className="py-2.5 px-6 bg-amber-600 hover:bg-amber-500 rounded-xl text-white transition font-bold flex items-center gap-2"
                       >
                         <Save className="h-4 w-4" />
-                        <span>ذخیره نهایی قالب در دایرکتوس</span>
+                        <span>ذخیره نهایی قالب در سیستم</span>
                       </button>
                     </div>
                   </div>
@@ -2821,7 +2821,7 @@ function DashboardContent() {
                 /* Templates Table list */
                 <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden text-xs">
                   <div className="p-4 bg-slate-950 border-b border-slate-800 font-bold text-slate-300">
-                    لیست قالب‌های بارگذاری شده از دایرکتوس ({templates.length} قالب)
+                    لیست قالب‌های بارگذاری شده در سیستم ({templates.length} قالب)
                   </div>
                   <table className="w-full text-right">
                     <thead className="bg-slate-950 text-slate-400 border-b border-slate-800 text-[10px] font-bold">
