@@ -445,62 +445,18 @@ function DashboardContent() {
               </p>
             </div>
 
-            <div className="space-y-3 bg-slate-950 p-4 rounded-2xl border border-slate-800/60">
-              <span className="text-[10px] font-bold text-blue-500 block uppercase tracking-wider">ورود سریع آزمایشی (بدون نیاز به رمز):</span>
-              <div className="grid grid-cols-1 gap-2.5">
-                <button 
-                  onClick={async () => {
-                    const session = await authService.login('demo@brandyar.com');
-                    if (session) {
-                      setUser(session);
-                      setActiveTab('cards');
-                      refreshData();
-                    }
-                  }}
-                  className="w-full py-2 bg-blue-600/15 hover:bg-blue-600/25 text-blue-400 rounded-xl text-xs font-extrabold border border-blue-600/30 transition flex items-center justify-between px-3"
-                >
-                  <span className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    ورود سریع به عنوان مشتری دمو (کارت‌ها)
-                  </span>
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-
-                <button 
-                  onClick={async () => {
-                    const session = await authService.login('tenant@brandyar.com');
-                    if (session) {
-                      setUser(session);
-                      setActiveTab('tenant-settings');
-                      refreshData();
-                    }
-                  }}
-                  className="w-full py-2 bg-indigo-600/15 hover:bg-indigo-600/25 text-indigo-400 rounded-xl text-xs font-extrabold border border-indigo-600/30 transition flex items-center justify-between px-3"
-                >
-                  <span className="flex items-center gap-2">
-                    <Building className="h-4 w-4" />
-                    ورود سریع به عنوان نماینده دمو (برندینگ)
-                  </span>
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-
-                <button 
-                  onClick={async () => {
-                    const session = await authService.login('admin@brandyar.com');
-                    if (session) {
-                      setUser(session);
-                      setActiveTab('admin-tenants');
-                      refreshData();
-                    }
-                  }}
-                  className="w-full py-2 bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 rounded-xl text-xs font-extrabold border border-amber-500/30 transition flex items-center justify-between px-3"
-                >
-                  <span className="flex items-center gap-2">
-                    <ShieldCheck className="h-4 w-4" />
-                    ورود سریع به عنوان ادمین کل سیستم
-                  </span>
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
+            <div className="space-y-4 bg-slate-950/40 p-5 rounded-2xl border border-slate-800/40">
+              <div className="flex items-center gap-3 text-xs text-slate-300">
+                <div className="h-2 w-2 rounded-full bg-blue-500"></div>
+                <span>ساخت کارت ویزیت دیجیتال شخصی و رسمی</span>
+              </div>
+              <div className="flex items-center gap-3 text-xs text-slate-300">
+                <div className="h-2 w-2 rounded-full bg-emerald-500"></div>
+                <span>طرح‌های بصری متنوع و قالب‌های از پیش‌طراحی‌شده</span>
+              </div>
+              <div className="flex items-center gap-3 text-xs text-slate-300">
+                <div className="h-2 w-2 rounded-full bg-purple-500"></div>
+                <span>ویرایش آنلاین، اطلاعات تماس کامل و دکمه‌های اقدام</span>
               </div>
             </div>
 
