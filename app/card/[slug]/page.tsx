@@ -9,9 +9,18 @@ import {
   Eye, Calendar, Check, AlertTriangle, ChevronLeft 
 } from 'lucide-react';
 
-const DIRECTUS_BASE_URL = typeof window !== 'undefined'
-  ? '/api/directus'
-  : (process.env.NEXT_PUBLIC_DIRECTUS_URL || 'https://directus-production-ec98.up.railway.app');
+const getDirectusBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    return '/api/directus';
+  }
+  let raw = process.env.NEXT_PUBLIC_DIRECTUS_URL || 'https://directus-production-ec98.up.railway.app';
+  if (raw && !/^https?:\/\//i.test(raw)) {
+    raw = `https://${raw}`;
+  }
+  return raw.replace(/\/+$/, '');
+};
+
+const DIRECTUS_BASE_URL = getDirectusBaseUrl();
 
 export default function PublicCardPage() {
   const { slug } = useParams();
@@ -150,7 +159,7 @@ export default function PublicCardPage() {
   }
 
   // Get social values
-  const { phone, whatsapp, telegram, instagram, linkedin, website, email } = card.social_links || {};
+  const { phone, mobile, extra_phones, whatsapp, telegram, instagram, linkedin, website, email } = card.social_links || {};
 
   // Download VCF Contact Handler
   const handleDownloadVCard = () => {
@@ -355,6 +364,66 @@ export default function PublicCardPage() {
                 </div>
               )}
 
+              {/* Maps Links */}
+              {(card.neshan || card.balad || card.waze || card.googlemap) && (
+                <div className="space-y-3 pt-4 border-t border-slate-100">
+                  <h3 className="text-xs font-bold uppercase tracking-wider opacity-60">مسیریابی روی نقشه</h3>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    {card.neshan && (
+                      <a href={card.neshan} target="_blank" rel="noreferrer" className="flex items-center gap-2 p-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl transition border border-slate-100 text-xs font-bold">
+                        <MapPin className="h-4 w-4 text-emerald-500 shrink-0" />
+                        <span>مسیریابی با نشان</span>
+                      </a>
+                    )}
+                    {card.balad && (
+                      <a href={card.balad} target="_blank" rel="noreferrer" className="flex items-center gap-2 p-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl transition border border-slate-100 text-xs font-bold">
+                        <MapPin className="h-4 w-4 text-blue-500 shrink-0" />
+                        <span>مسیریابی با بلد</span>
+                      </a>
+                    )}
+                    {card.waze && (
+                      <a href={card.waze} target="_blank" rel="noreferrer" className="flex items-center gap-2 p-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl transition border border-slate-100 text-xs font-bold">
+                        <MapPin className="h-4 w-4 text-amber-500 shrink-0" />
+                        <span>مسیریابی با ویز</span>
+                      </a>
+                    )}
+                    {card.googlemap && (
+                      <a href={card.googlemap} target="_blank" rel="noreferrer" className="flex items-center gap-2 p-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl transition border border-slate-100 text-xs font-bold">
+                        <MapPin className="h-4 w-4 text-red-500 shrink-0" />
+                        <span>گوگل مپ</span>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Multiple Contacts */}
+              {(mobile || (extra_phones && extra_phones.length > 0)) && (
+                <div className="space-y-3 pt-4 border-t border-slate-100">
+                  <h3 className="text-xs font-bold uppercase tracking-wider opacity-60">شماره تماس‌های دیگر</h3>
+                  <div className="space-y-2">
+                    {mobile && (
+                      <a href={`tel:${mobile}`} className="flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 rounded-xl transition border border-slate-100 text-xs">
+                        <span className="flex items-center gap-2 font-semibold">
+                          <Phone className="h-4 w-4 text-blue-600" />
+                          تلفن همراه (موبایل):
+                        </span>
+                        <span className="font-mono text-slate-600 font-bold">{mobile}</span>
+                      </a>
+                    )}
+                    {extra_phones && extra_phones.map((ph: string, idx: number) => (
+                      <a key={idx} href={`tel:${ph}`} className="flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 rounded-xl transition border border-slate-100 text-xs">
+                        <span className="flex items-center gap-2 font-semibold">
+                          <Phone className="h-4 w-4 text-slate-500" />
+                          شماره تماس جانبی {idx + 1}:
+                        </span>
+                        <span className="font-mono text-slate-600 font-bold">{ph}</span>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Footer Powered By */}
               <div className="text-center pt-8 opacity-40 text-[10px]">
                 <span>قدرت گرفته از سامانه کارت ویزیت دیجیتال کاردینو</span>
@@ -499,6 +568,66 @@ export default function PublicCardPage() {
               </div>
             )}
 
+            {/* Maps Links */}
+            {(card.neshan || card.balad || card.waze || card.googlemap) && (
+              <div className="space-y-3 pt-4 border-t border-white/10">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">مسیریابی روی نقشه</h3>
+                <div className="grid grid-cols-2 gap-2.5">
+                  {card.neshan && (
+                    <a href={card.neshan} target="_blank" rel="noreferrer" className="flex items-center gap-2 p-3 bg-white/5 hover:bg-white/10 rounded-xl transition border border-white/5 text-xs font-bold text-white">
+                      <MapPin className="h-4 w-4 text-emerald-400 shrink-0" />
+                      <span>نقشه نشان</span>
+                    </a>
+                  )}
+                  {card.balad && (
+                    <a href={card.balad} target="_blank" rel="noreferrer" className="flex items-center gap-2 p-3 bg-white/5 hover:bg-white/10 rounded-xl transition border border-white/5 text-xs font-bold text-white">
+                      <MapPin className="h-4 w-4 text-cyan-400 shrink-0" />
+                      <span>نقشه بلد</span>
+                    </a>
+                  )}
+                  {card.waze && (
+                    <a href={card.waze} target="_blank" rel="noreferrer" className="flex items-center gap-2 p-3 bg-white/5 hover:bg-white/10 rounded-xl transition border border-white/5 text-xs font-bold text-white">
+                      <MapPin className="h-4 w-4 text-amber-400 shrink-0" />
+                      <span>مسیریاب ویز</span>
+                    </a>
+                  )}
+                  {card.googlemap && (
+                    <a href={card.googlemap} target="_blank" rel="noreferrer" className="flex items-center gap-2 p-3 bg-white/5 hover:bg-white/10 rounded-xl transition border border-white/5 text-xs font-bold text-white">
+                      <MapPin className="h-4 w-4 text-red-400 shrink-0" />
+                      <span>گوگل مپ</span>
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Multiple Contacts */}
+            {(mobile || (extra_phones && extra_phones.length > 0)) && (
+              <div className="space-y-3 pt-4 border-t border-white/10">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">شماره تماس‌های دیگر</h3>
+                <div className="space-y-2">
+                  {mobile && (
+                    <a href={`tel:${mobile}`} className="flex items-center justify-between p-3.5 bg-white/5 hover:bg-white/10 rounded-xl transition border border-white/5 text-xs text-white">
+                      <span className="flex items-center gap-2 font-semibold text-slate-300">
+                        <Phone className="h-4 w-4 text-cyan-400" />
+                        تلفن همراه (موبایل):
+                      </span>
+                      <span className="font-mono font-bold text-cyan-400">{mobile}</span>
+                    </a>
+                  )}
+                  {extra_phones && extra_phones.map((ph: string, idx: number) => (
+                    <a key={idx} href={`tel:${ph}`} className="flex items-center justify-between p-3.5 bg-white/5 hover:bg-white/10 rounded-xl transition border border-white/5 text-xs text-white">
+                      <span className="flex items-center gap-2 font-semibold text-slate-300">
+                        <Phone className="h-4 w-4 text-slate-400" />
+                        شماره تماس جانبی {idx + 1}:
+                      </span>
+                      <span className="font-mono font-bold text-slate-300">{ph}</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Footer */}
             <div className="text-center pt-8 opacity-30 text-[10px]">
               <span>Powered by Twin Digital Business Card system</span>
@@ -601,6 +730,66 @@ export default function PublicCardPage() {
                     <ChevronLeft className="h-3 w-3" />
                   </a>
                 ))}
+              </div>
+            )}
+
+            {/* Maps Links */}
+            {(card.neshan || card.balad || card.waze || card.googlemap) && (
+              <div className="space-y-2.5 pt-2">
+                <h3 className="text-[11px] font-bold tracking-wider uppercase opacity-40">موقعیت روی نقشه</h3>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  {card.neshan && (
+                    <a href={card.neshan} target="_blank" rel="noreferrer" className="flex items-center gap-2 py-2 px-3 bg-slate-50 hover:bg-slate-100 rounded border border-slate-100 text-slate-700">
+                      <MapPin className="h-3.5 w-3.5 text-slate-500" />
+                      <span>نشان</span>
+                    </a>
+                  )}
+                  {card.balad && (
+                    <a href={card.balad} target="_blank" rel="noreferrer" className="flex items-center gap-2 py-2 px-3 bg-slate-50 hover:bg-slate-100 rounded border border-slate-100 text-slate-700">
+                      <MapPin className="h-3.5 w-3.5 text-slate-500" />
+                      <span>بلد</span>
+                    </a>
+                  )}
+                  {card.waze && (
+                    <a href={card.waze} target="_blank" rel="noreferrer" className="flex items-center gap-2 py-2 px-3 bg-slate-50 hover:bg-slate-100 rounded border border-slate-100 text-slate-700">
+                      <MapPin className="h-3.5 w-3.5 text-slate-500" />
+                      <span>ویز</span>
+                    </a>
+                  )}
+                  {card.googlemap && (
+                    <a href={card.googlemap} target="_blank" rel="noreferrer" className="flex items-center gap-2 py-2 px-3 bg-slate-50 hover:bg-slate-100 rounded border border-slate-100 text-slate-700">
+                      <MapPin className="h-3.5 w-3.5 text-slate-500" />
+                      <span>گوگل‌مپ</span>
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Multiple Contacts */}
+            {(mobile || (extra_phones && extra_phones.length > 0)) && (
+              <div className="space-y-2 pt-2">
+                <h3 className="text-[11px] font-bold tracking-wider uppercase opacity-40">تماس‌های دیگر</h3>
+                <div className="space-y-1.5">
+                  {mobile && (
+                    <a href={`tel:${mobile}`} className="flex items-center justify-between py-2 border-b border-slate-100 text-xs text-slate-800">
+                      <span className="flex items-center gap-2">
+                        <Phone className="h-3.5 w-3.5 text-slate-400" />
+                        تلفن همراه:
+                      </span>
+                      <span className="font-mono font-bold">{mobile}</span>
+                    </a>
+                  )}
+                  {extra_phones && extra_phones.map((ph: string, idx: number) => (
+                    <a key={idx} href={`tel:${ph}`} className="flex items-center justify-between py-2 border-b border-slate-100 text-xs text-slate-800">
+                      <span className="flex items-center gap-2">
+                        <Phone className="h-3.5 w-3.5 text-slate-400" />
+                        تلفن جانبی {idx + 1}:
+                      </span>
+                      <span className="font-mono font-semibold text-slate-600">{ph}</span>
+                    </a>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -735,6 +924,66 @@ export default function PublicCardPage() {
                     <ChevronLeft className="h-4 w-4 text-[#e2b53e]" />
                   </a>
                 ))}
+              </div>
+            )}
+
+            {/* Maps Links */}
+            {(card.neshan || card.balad || card.waze || card.googlemap) && (
+              <div className="space-y-3 pt-4 border-t border-amber-500/15">
+                <h3 className="text-[10px] font-bold uppercase tracking-wider text-stone-500 text-center">مسیریابی مجلل</h3>
+                <div className="grid grid-cols-2 gap-2.5">
+                  {card.neshan && (
+                    <a href={card.neshan} target="_blank" rel="noreferrer" className="flex items-center gap-2 p-3 bg-stone-900 hover:bg-stone-800 rounded-xl transition border border-amber-500/5 text-xs text-amber-100 font-semibold">
+                      <MapPin className="h-4 w-4 text-[#e2b53e]" />
+                      <span>نقشه نشان</span>
+                    </a>
+                  )}
+                  {card.balad && (
+                    <a href={card.balad} target="_blank" rel="noreferrer" className="flex items-center gap-2 p-3 bg-stone-900 hover:bg-stone-800 rounded-xl transition border border-amber-500/5 text-xs text-amber-100 font-semibold">
+                      <MapPin className="h-4 w-4 text-[#e2b53e]" />
+                      <span>نقشه بلد</span>
+                    </a>
+                  )}
+                  {card.waze && (
+                    <a href={card.waze} target="_blank" rel="noreferrer" className="flex items-center gap-2 p-3 bg-stone-900 hover:bg-stone-800 rounded-xl transition border border-amber-500/5 text-xs text-amber-100 font-semibold">
+                      <MapPin className="h-4 w-4 text-[#e2b53e]" />
+                      <span>مسیریاب ویز</span>
+                    </a>
+                  )}
+                  {card.googlemap && (
+                    <a href={card.googlemap} target="_blank" rel="noreferrer" className="flex items-center gap-2 p-3 bg-stone-900 hover:bg-stone-800 rounded-xl transition border border-amber-500/5 text-xs text-amber-100 font-semibold">
+                      <MapPin className="h-4 w-4 text-[#e2b53e]" />
+                      <span>گوگل مپ VIP</span>
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Multiple Contacts */}
+            {(mobile || (extra_phones && extra_phones.length > 0)) && (
+              <div className="space-y-3 pt-4 border-t border-amber-500/15">
+                <h3 className="text-[10px] font-bold uppercase tracking-wider text-stone-500 text-center">راه‌های ارتباطی ثانویه</h3>
+                <div className="space-y-2">
+                  {mobile && (
+                    <a href={`tel:${mobile}`} className="flex items-center justify-between p-3.5 bg-stone-900 hover:bg-stone-800 rounded-xl transition border border-amber-500/5 text-xs">
+                      <span className="flex items-center gap-2 text-stone-300">
+                        <Phone className="h-4 w-4 text-[#e2b53e]" />
+                        تلفن همراه (موبایل):
+                      </span>
+                      <span className="font-mono text-[#e2b53e] font-bold">{mobile}</span>
+                    </a>
+                  )}
+                  {extra_phones && extra_phones.map((ph: string, idx: number) => (
+                    <a key={idx} href={`tel:${ph}`} className="flex items-center justify-between p-3.5 bg-stone-900 hover:bg-stone-800 rounded-xl transition border border-amber-500/5 text-xs">
+                      <span className="flex items-center gap-2 text-stone-300">
+                        <Phone className="h-4 w-4 text-stone-400" />
+                        شماره تماس کمکی {idx + 1}:
+                      </span>
+                      <span className="font-mono text-stone-200 font-semibold">{ph}</span>
+                    </a>
+                  ))}
+                </div>
               </div>
             )}
 

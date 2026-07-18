@@ -10,7 +10,7 @@ import {
   Settings, User, LogOut, LayoutGrid, CreditCard, BarChart2, ShieldCheck, 
   Users, Building, DollarSign, ArrowLeft, Sliders, Smartphone, Palette, 
   Code, Link2, Trash, CheckSquare, Sparkles, HelpCircle, RefreshCw, Star, ArrowRight,
-  Phone, Mail, Send, MessageCircle, ChevronLeft
+  Phone, Mail, Send, MessageCircle, ChevronLeft, MapPin
 } from 'lucide-react';
 
 function DashboardContent() {
@@ -28,6 +28,7 @@ function DashboardContent() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [analytics, setAnalytics] = useState<CardAnalytics[]>([]);
+  const [allUsers, setAllUsers] = useState<any[]>([]);
 
   // Auth Forms
   const [loginEmail, setLoginEmail] = useState(''); // also serves as loginId (email or mobile)
@@ -49,11 +50,15 @@ function DashboardContent() {
   const [isCopiedSlug, setIsCopiedSlug] = useState<string | null>(null);
   const [newBtnLabel, setNewBtnLabel] = useState('');
   const [newBtnUrl, setNewBtnUrl] = useState('');
+  const [newExtraPhone, setNewExtraPhone] = useState('');
   
-  // Simulated Bank Gate Modal
+  // Simulated Bank Gate Modal / Offline Payment Submission
   const [payingPlan, setPayingPlan] = useState<Plan | null>(null);
-  const [simulatedGateway, setSimulatedGateway] = useState('زرین‌پال');
+  const [simulatedGateway, setSimulatedGateway] = useState('کارت به کارت (پرداخت آفلاین)');
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [offlineRefId, setOfflineRefId] = useState('');
+  const [offlineDepositTime, setOfflineDepositTime] = useState('');
+  const [offlineNote, setOfflineNote] = useState('');
 
   // Tenant Panel States
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
@@ -108,6 +113,16 @@ function DashboardContent() {
           const found = fetchedTenants.find(t => toUUID(t.id) === toUUID(tid));
           if (found) setSelectedTenant(found);
         }
+
+        // Fetch users for admin/tenant to manage
+        if (session.role === 'admin' || session.role === 'tenant') {
+          try {
+            const fetchedUsers = await dbService.getAllUsers();
+            setAllUsers(fetchedUsers);
+          } catch (usersErr) {
+            console.warn('Could not fetch users list:', usersErr);
+          }
+        }
       }
     } catch (err: any) {
       console.error('Error fetching data for dashboard:', err);
@@ -124,22 +139,6 @@ function DashboardContent() {
       setLoading(true);
       const session = authService.getCurrentUser();
       setUser(session);
-      
-      // Direct from search queries
-      const roleParam = searchParams.get('role') as any;
-      if (roleParam && ['customer', 'tenant', 'admin'].includes(roleParam)) {
-        let quickEmail = 'demo@brandyar.com';
-        if (roleParam === 'tenant') quickEmail = 'tenant@brandyar.com';
-        if (roleParam === 'admin') quickEmail = 'admin@brandyar.com';
-        try {
-          const quickSession = await authService.login(quickEmail);
-          if (quickSession) {
-            setUser(quickSession);
-          }
-        } catch (e) {
-          console.error(e);
-        }
-      }
 
       await refreshData();
       setLoading(false);
@@ -233,8 +232,14 @@ function DashboardContent() {
       job_title: 'سمت کاری شما',
       company: 'نام شرکت یا برند',
       bio: 'توضیحات کوتاهی درباره تخصص و فعالیت‌های خود بنویسید.',
+      neshan: '',
+      waze: '',
+      balad: '',
+      googlemap: '',
       social_links: {
         phone: '',
+        mobile: '',
+        extra_phones: [],
         whatsapp: '',
         telegram: '',
         instagram: '',
@@ -335,44 +340,90 @@ function DashboardContent() {
 
   const handleProcessSimulatedPayment = () => {
     if (!user || !payingPlan) return;
+    
+    const isOffline = simulatedGateway.includes('کارت به کارت') || simulatedGateway.includes('آفلاین');
+    
+    if (isOffline) {
+      if (!offlineRefId.trim()) {
+        alert('لطفاً شماره ارجاع / کد رهگیری تراکنش را وارد نمایید.');
+        return;
+      }
+      if (!offlineDepositTime.trim()) {
+        alert('لطفاً تاریخ و زمان واریز تراکنش را وارد نمایید.');
+        return;
+      }
+    }
+
     setIsProcessingPayment(true);
     
     setTimeout(async () => {
       try {
-        // 1. Create Transaction
-        const newTx: Transaction = {
-          id: 'tx-' + Math.floor(Math.random() * 9000000 + 1000000),
-          user_id: user.id,
-          tenant_id: user.tenant_id || 't-1',
-          amount: payingPlan.price,
-          gateway: simulatedGateway,
-          authority: 'AUTH-' + Math.random().toString(36).substring(3, 10).toUpperCase(),
-          ref_id: Math.floor(Math.random() * 89999999 + 10000000).toString(),
-          status: 'success',
-          payload: { simulated: true, cardLimitIncrease: true },
-          created_at: new Date().toISOString()
-        };
-        await dbService.saveTransaction(newTx);
+        if (isOffline) {
+          // Create a pending transaction for manual admin verification
+          const newTx: Transaction = {
+            id: 'tx-off-' + Math.floor(Math.random() * 9000000 + 1000000),
+            user_id: user.id,
+            tenant_id: user.tenant_id || 't-1',
+            amount: payingPlan.price,
+            gateway: 'کارت به کارت (آفلاین)',
+            authority: 'AUTH-OFF-' + Math.random().toString(36).substring(3, 10).toUpperCase(),
+            ref_id: offlineRefId.trim(),
+            status: 'pending',
+            payload: { 
+              offline: true, 
+              deposit_time: offlineDepositTime.trim(), 
+              note: offlineNote.trim(),
+              plan_id: payingPlan.id,
+              plan_title: payingPlan.title,
+              plan_duration: payingPlan.duration_days
+            },
+            created_at: new Date().toISOString()
+          };
+          await dbService.saveTransaction(newTx);
+          
+          setIsProcessingPayment(false);
+          setPayingPlan(null);
+          setOfflineRefId('');
+          setOfflineDepositTime('');
+          setOfflineNote('');
+          await refreshData();
+          alert(`درخواست فعال‌سازی اشتراک پلن "${payingPlan.title}" با کد رهگیری ${newTx.ref_id} ثبت گردید. پس از بررسی و تایید توسط مدیریت، اشتراک شما فعال خواهد شد.`);
+        } else {
+          // 1. Create Transaction
+          const newTx: Transaction = {
+            id: 'tx-' + Math.floor(Math.random() * 9000000 + 1000000),
+            user_id: user.id,
+            tenant_id: user.tenant_id || 't-1',
+            amount: payingPlan.price,
+            gateway: simulatedGateway,
+            authority: 'AUTH-' + Math.random().toString(36).substring(3, 10).toUpperCase(),
+            ref_id: Math.floor(Math.random() * 89999999 + 10000000).toString(),
+            status: 'success',
+            payload: { simulated: true, cardLimitIncrease: true },
+            created_at: new Date().toISOString()
+          };
+          await dbService.saveTransaction(newTx);
 
-        // 2. Create/Extend Subscription
-        const startDate = new Date();
-        const endDate = new Date();
-        endDate.setDate(startDate.getDate() + payingPlan.duration_days);
+          // 2. Create/Extend Subscription
+          const startDate = new Date();
+          const endDate = new Date();
+          endDate.setDate(startDate.getDate() + payingPlan.duration_days);
 
-        const newSub: Subscription = {
-          id: 'sub-' + Math.random().toString(36).substring(2, 11),
-          user_id: user.id,
-          plan_id: payingPlan.id,
-          status: 'active',
-          start_date: startDate.toISOString().split('T')[0],
-          end_date: endDate.toISOString().split('T')[0]
-        };
-        await dbService.saveSubscription(newSub);
+          const newSub: Subscription = {
+            id: 'sub-' + Math.random().toString(36).substring(2, 11),
+            user_id: user.id,
+            plan_id: payingPlan.id,
+            status: 'active',
+            start_date: startDate.toISOString().split('T')[0],
+            end_date: endDate.toISOString().split('T')[0]
+          };
+          await dbService.saveSubscription(newSub);
 
-        setIsProcessingPayment(false);
-        setPayingPlan(null);
-        await refreshData();
-        alert(`پرداخت مبلغ ${payingPlan.price.toLocaleString('fa-IR')} تومان با موفقیت در درگاه شبیه‌سازی شده تراکنش تایید و اشتراک شما فعال گردید!`);
+          setIsProcessingPayment(false);
+          setPayingPlan(null);
+          await refreshData();
+          alert(`پرداخت مبلغ ${payingPlan.price.toLocaleString('fa-IR')} تومان با موفقیت در درگاه شبیه‌سازی شده تراکنش تایید و اشتراک شما فعال گردید!`);
+        }
       } catch (err: any) {
         setIsProcessingPayment(false);
         alert('خطا در ثبت اشتراک و تراکنش در سیستم: ' + err.message);
@@ -414,6 +465,50 @@ function DashboardContent() {
       await refreshData();
     } catch (err: any) {
       alert('خطا در ذخیره‌سازی پلن نمایندگی در سیستم: ' + err.message);
+    }
+  };
+
+  const handleAdminVerifyOfflinePayment = async (tx: Transaction, approved: boolean) => {
+    try {
+      if (approved) {
+        // 1. Update transaction status
+        const updatedTx: Transaction = {
+          ...tx,
+          status: 'success'
+        };
+        await dbService.saveTransaction(updatedTx);
+
+        // 2. Create or extend Subscription
+        const planDuration = tx.payload?.plan_duration || 30;
+        const planId = tx.payload?.plan_id;
+        
+        const startDate = new Date();
+        const endDate = new Date();
+        endDate.setDate(startDate.getDate() + planDuration);
+
+        const newSub: Subscription = {
+          id: 'sub-' + Math.random().toString(36).substring(2, 11),
+          user_id: tx.user_id,
+          plan_id: planId,
+          status: 'active',
+          start_date: startDate.toISOString().split('T')[0],
+          end_date: endDate.toISOString().split('T')[0]
+        };
+        await dbService.saveSubscription(newSub);
+
+        alert(`پرداخت تراکنش به شماره ${tx.ref_id} با موفقیت تایید و اشتراک کاربر بلافاصله فعال گردید.`);
+      } else {
+        // Update transaction status to failed
+        const updatedTx: Transaction = {
+          ...tx,
+          status: 'failed'
+        };
+        await dbService.saveTransaction(updatedTx);
+        alert(`پرداخت تراکنش به شماره ${tx.ref_id} رد شد.`);
+      }
+      await refreshData();
+    } catch (err: any) {
+      alert('خطا در تایید تراکنش بانکی: ' + err.message);
     }
   };
 
@@ -795,6 +890,30 @@ function DashboardContent() {
                   </button>
 
                   <button
+                    onClick={() => setActiveTab('admin-users')}
+                    className={`w-full py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center gap-2.5 ${
+                      activeTab === 'admin-users' 
+                      ? 'bg-amber-600 text-white' 
+                      : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                    }`}
+                  >
+                    <Users className="h-4 w-4" />
+                    مدیریت کاربران سامانه
+                  </button>
+
+                  <button
+                    onClick={() => setActiveTab('admin-analytics')}
+                    className={`w-full py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center gap-2.5 ${
+                      activeTab === 'admin-analytics' 
+                      ? 'bg-amber-600 text-white' 
+                      : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                    }`}
+                  >
+                    <BarChart2 className="h-4 w-4" />
+                    آمار کلی بازدیدهای پلتفرم
+                  </button>
+
+                  <button
                     onClick={() => setActiveTab('admin-transactions')}
                     className={`w-full py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center gap-2.5 ${
                       activeTab === 'admin-transactions' 
@@ -858,51 +977,149 @@ function DashboardContent() {
         {/* MAIN PANEL CONTENT SPACE */}
         <main className="flex-grow bg-slate-900 border border-slate-800 rounded-3xl p-4 sm:p-6 lg:p-8 min-w-0 flex flex-col gap-6 relative">
           
-          {/* PAYMENT GATEWAY MODAL (SIMULATED) */}
+          {/* PAYMENT GATEWAY MODAL (SIMULATED & OFFLINE) */}
           {payingPlan && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-              <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 text-right space-y-6" dir="rtl">
+              <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 text-right space-y-5 shadow-2xl overflow-y-auto max-h-[90vh]" dir="rtl">
                 <div className="flex justify-between items-center pb-3 border-b border-slate-800">
-                  <h4 className="text-base font-bold text-white">درگاه پرداخت واسط بانکی (شبیه‌ساز شتاب)</h4>
+                  <h4 className="text-sm font-black text-white">تسویه حساب و فعال‌سازی اشتراک</h4>
                   <button 
                     onClick={() => setPayingPlan(null)}
-                    className="p-1 hover:bg-slate-800 rounded-full text-slate-400 transition"
+                    className="p-1.5 hover:bg-slate-800 rounded-full text-slate-400 transition text-base"
                   >
                     ×
                   </button>
                 </div>
 
-                <div className="space-y-2 text-xs">
-                  <p className="text-slate-400">شما در حال خرید پلن جدید هستید:</p>
-                  <p className="text-lg font-black text-white">{payingPlan.title}</p>
-                  <p className="text-slate-400">مدت زمان اعتبار: <span className="text-slate-200 font-bold">{payingPlan.duration_days} روز</span></p>
-                  <p className="text-slate-400">مبلغ قابل پرداخت: <span className="text-emerald-400 font-black text-base">{(payingPlan.price || 0).toLocaleString('fa-IR')}</span> تومان</p>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[11px] font-bold text-slate-400 block">درگاه پرداخت را انتخاب کنید:</label>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    {['زرین‌پال', 'زیبال', 'به‌پرداخت ملت', 'سامان کیش'].map((gate) => (
-                      <div 
-                        key={gate}
-                        onClick={() => setSimulatedGateway(gate)}
-                        className={`p-3 rounded-xl border text-center cursor-pointer transition ${
-                          simulatedGateway === gate 
-                          ? 'border-blue-500 bg-blue-500/10 text-white font-bold' 
-                          : 'border-slate-800 bg-slate-950 text-slate-400 hover:bg-slate-800/40'
-                        }`}
-                      >
-                        {gate}
-                      </div>
-                    ))}
+                <div className="p-4 bg-slate-950/50 rounded-2xl border border-slate-850 space-y-1.5 text-xs">
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400">پلن انتخابی:</span>
+                    <span className="font-extrabold text-white text-sm">{payingPlan.title}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400">مدت زمان اعتبار:</span>
+                    <span className="font-bold text-slate-200">{payingPlan.duration_days} روز</span>
+                  </div>
+                  <div className="flex justify-between items-center pt-1 border-t border-slate-850">
+                    <span className="text-slate-400">مبلغ نهایی قابل پرداخت:</span>
+                    <span className="font-black text-amber-400 text-sm">{(payingPlan.price || 0).toLocaleString('fa-IR')} <span className="text-[10px] font-normal text-slate-400">تومان</span></span>
                   </div>
                 </div>
 
-                <div className="p-3 bg-blue-500/10 rounded-xl border border-blue-500/20 text-[10px] text-blue-400 leading-relaxed">
-                  ⚠️ این یک تراکنش شبیه‌سازی شده کامل است که اطلاعات خرید را در جدول تراکنش‌ها و اشتراک‌های فعال سیستم ثبت می‌کند تا فرایند برنامه ۱۰۰٪ آزمایش شود. هیچ پول واقعی کسر نمی‌شود.
+                {/* Tab Switcher for Offline vs Online */}
+                <div className="flex bg-slate-950 p-1 rounded-xl border border-slate-850">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSimulatedGateway('کارت به کارت (پرداخت آفلاین)');
+                    }}
+                    className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${
+                      simulatedGateway === 'کارت به کارت (پرداخت آفلاین)'
+                        ? 'bg-blue-600 text-white'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    کارت به کارت (پرداخت آفلاین)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSimulatedGateway('زرین‌پال');
+                    }}
+                    className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${
+                      simulatedGateway !== 'کارت به کارت (پرداخت آفلاین)'
+                        ? 'bg-blue-600 text-white'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    درگاه آنلاین شبیه‌ساز
+                  </button>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 pt-3">
+                {simulatedGateway === 'کارت به کارت (پرداخت آفلاین)' ? (
+                  /* OFFLINE PAYMENT FORM */
+                  <div className="space-y-3.5 text-right">
+                    <div className="p-3 bg-blue-500/5 border border-blue-500/10 rounded-2xl space-y-1.5 text-xs text-slate-300">
+                      <p className="font-bold text-blue-400">📌 اطلاعات حساب بانکی کاردینو جهت واریز:</p>
+                      <div className="flex justify-between">
+                        <span>شماره کارت بانک پاسارگاد:</span>
+                        <span className="font-mono text-white font-bold tracking-wider">۵۰۲۲-۲۹۱۰-۱۲۳۴-۵۶۷۸</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>به نام شرکت:</span>
+                        <span className="text-white font-bold">کاردینو دیجیتال سیستم</span>
+                      </div>
+                      <p className="text-[10px] text-slate-400 leading-relaxed pt-1.5 border-t border-slate-850/40">
+                        مبلغ پلن را به شماره کارت فوق انتقال داده و کد رهگیری/شماره سند را در فرم زیر ثبت نمایید تا اشتراک شما توسط ادمین تایید شود.
+                      </p>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-bold text-slate-400 block">کد رهگیری / شماره ارجاع تراکنش:</label>
+                        <input
+                          type="text"
+                          required
+                          value={offlineRefId}
+                          onChange={(e) => setOfflineRefId(e.target.value)}
+                          placeholder="مثال: ۹۸۷۶۵۴۳۲۱۰"
+                          className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs font-mono text-white placeholder:text-slate-600"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-bold text-slate-400 block">تاریخ و ساعت دقیق واریز:</label>
+                        <input
+                          type="text"
+                          required
+                          value={offlineDepositTime}
+                          onChange={(e) => setOfflineDepositTime(e.target.value)}
+                          placeholder="مثال: امروز ساعت ۱۴:۳۰"
+                          className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder:text-slate-600"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-bold text-slate-400 block">توضیحات واریز (نام بانک مبدا یا نام واریزکننده):</label>
+                        <textarea
+                          rows={2}
+                          value={offlineNote}
+                          onChange={(e) => setOfflineNote(e.target.value)}
+                          placeholder="مثال: واریز از کارت بانک ملی به نام محمد..."
+                          className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder:text-slate-600 resize-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  /* SIMULATED ONLINE GATEWAYS */
+                  <div className="space-y-4 text-right">
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-bold text-slate-400 block">یکی از درگاه‌های شتاب را انتخاب کنید:</label>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        {['زرین‌پال', 'زیبال', 'به‌پرداخت ملت', 'سامان کیش'].map((gate) => (
+                          <div 
+                            key={gate}
+                            onClick={() => setSimulatedGateway(gate)}
+                            className={`p-3 rounded-xl border text-center cursor-pointer transition ${
+                              simulatedGateway === gate 
+                              ? 'border-blue-500 bg-blue-500/10 text-white font-bold' 
+                              : 'border-slate-800 bg-slate-950 text-slate-400 hover:bg-slate-800/40'
+                            }`}
+                          >
+                            {gate}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="p-3.5 bg-blue-500/10 rounded-2xl border border-blue-500/20 text-[10px] text-blue-400 leading-relaxed">
+                      ⚠️ این یک تراکنش شبیه‌سازی شده کامل است که بلافاصله تایید شده و اشتراک را فعال می‌سازد.
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-800">
                   <button 
                     onClick={() => setPayingPlan(null)}
                     className="py-2.5 rounded-xl border border-slate-800 bg-slate-950 text-xs font-bold text-slate-400 hover:bg-slate-800"
@@ -915,7 +1132,7 @@ function DashboardContent() {
                     className="py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white transition flex items-center justify-center gap-2"
                   >
                     {isProcessingPayment ? <RefreshCw className="h-4 w-4 animate-spin" /> : null}
-                    <span>تایید و پرداخت فاکتور</span>
+                    <span>ثبت و تایید پرداخت</span>
                   </button>
                 </div>
               </div>
@@ -1308,6 +1525,61 @@ function DashboardContent() {
                         </div>
                       </div>
 
+                      {/* MAPS LINKS */}
+                      <div className="p-4 bg-slate-900/40 border border-slate-850 rounded-xl space-y-3">
+                        <h5 className="font-bold text-white text-xs flex items-center gap-1.5">
+                          <MapPin className="h-4 w-4 text-blue-400" />
+                          لینک‌های آدرس روی نقشه (نشان، بلد، ویز و گوگل مپ)
+                        </h5>
+                        <p className="text-[10px] text-slate-400">لینک مستقیم موقعیت مکانی خود را روی نقشه‌های مختلف قرار دهید تا کاربران بتوانند به راحتی شما را مسیریابی کنند.</p>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <span className="text-[10px] text-slate-400">نقشه نشان (Neshan):</span>
+                            <input 
+                              type="text" 
+                              value={editingCard.neshan || ''} 
+                              onChange={(e) => setEditingCard({ ...editingCard, neshan: e.target.value })}
+                              placeholder="https://neshan.org/maps/..."
+                              className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded text-[11px] text-left font-mono"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <span className="text-[10px] text-slate-400">نقشه بلد (Balad):</span>
+                            <input 
+                              type="text" 
+                              value={editingCard.balad || ''} 
+                              onChange={(e) => setEditingCard({ ...editingCard, balad: e.target.value })}
+                              placeholder="https://balad.ir/location?..."
+                              className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded text-[11px] text-left font-mono"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <span className="text-[10px] text-slate-400">مسیریاب ویز (Waze):</span>
+                            <input 
+                              type="text" 
+                              value={editingCard.waze || ''} 
+                              onChange={(e) => setEditingCard({ ...editingCard, waze: e.target.value })}
+                              placeholder="https://waze.com/ul?..."
+                              className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded text-[11px] text-left font-mono"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <span className="text-[10px] text-slate-400">گوگل مپ (Google Maps):</span>
+                            <input 
+                              type="text" 
+                              value={editingCard.googlemap || ''} 
+                              onChange={(e) => setEditingCard({ ...editingCard, googlemap: e.target.value })}
+                              placeholder="https://maps.google.com/..."
+                              className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded text-[11px] text-left font-mono"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
                       {/* SOCIAL LINKS */}
                       <div className="p-4 bg-slate-900/40 border border-slate-850 rounded-xl space-y-3">
                         <h5 className="font-bold text-white text-xs flex items-center gap-1.5">
@@ -1317,13 +1589,26 @@ function DashboardContent() {
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div className="space-y-1">
-                            <span className="text-[10px] text-slate-400">تلفن تماس:</span>
+                            <span className="text-[10px] text-slate-400">تلفن ثابت:</span>
                             <input 
                               type="text" 
                               value={editingCard.social_links?.phone || ''} 
                               onChange={(e) => setEditingCard({
                                 ...editingCard,
                                 social_links: { ...(editingCard.social_links || {}), phone: e.target.value }
+                              })}
+                              className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded text-[11px]"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <span className="text-[10px] text-slate-400">تلفن همراه (موبایل):</span>
+                            <input 
+                              type="text" 
+                              value={editingCard.social_links?.mobile || ''} 
+                              onChange={(e) => setEditingCard({
+                                ...editingCard,
+                                social_links: { ...(editingCard.social_links || {}), mobile: e.target.value }
                               })}
                               className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded text-[11px]"
                             />
@@ -1366,6 +1651,63 @@ function DashboardContent() {
                               })}
                               className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded text-[11px] text-left font-mono"
                             />
+                          </div>
+                        </div>
+
+                        {/* MULTIPLE PHONE NUMBERS */}
+                        <div className="border-t border-slate-800 pt-3 space-y-2">
+                          <span className="text-[10px] font-bold text-white block">شماره تماس‌های ثابت/همراه اضافی دیگر:</span>
+                          
+                          <div className="flex gap-2">
+                            <input 
+                              type="text"
+                              placeholder="مثلاً: ۰۲۱۸۸۸۸۸۸۸۸ یا ۰۹۱۲۳۴۵۶۷۸۹"
+                              value={newExtraPhone}
+                              onChange={(e) => setNewExtraPhone(e.target.value)}
+                              className="flex-1 px-2.5 py-1.5 bg-slate-950 border border-slate-850 rounded text-[11px]"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (!newExtraPhone.trim()) return;
+                                const currentExtra = editingCard.social_links?.extra_phones || [];
+                                setEditingCard({
+                                  ...editingCard,
+                                  social_links: {
+                                    ...(editingCard.social_links || {}),
+                                    extra_phones: [...currentExtra, newExtraPhone.trim()]
+                                  }
+                                });
+                                setNewExtraPhone('');
+                              }}
+                              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded text-[11px] text-white font-bold transition"
+                            >
+                              افزودن شماره
+                            </button>
+                          </div>
+
+                          <div className="flex flex-wrap gap-1.5 pt-1">
+                            {(editingCard.social_links?.extra_phones || []).map((ph, idx) => (
+                              <span key={idx} className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-slate-950 border border-slate-800 text-[10px] text-slate-300 rounded-full">
+                                <span>{ph}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const currentExtra = editingCard.social_links?.extra_phones || [];
+                                    setEditingCard({
+                                      ...editingCard,
+                                      social_links: {
+                                        ...(editingCard.social_links || {}),
+                                        extra_phones: currentExtra.filter((_, i) => i !== idx)
+                                      }
+                                    });
+                                  }}
+                                  className="text-red-400 hover:text-red-300 font-bold"
+                                >
+                                  ×
+                                </button>
+                              </span>
+                            ))}
                           </div>
                         </div>
                       </div>
@@ -2319,7 +2661,7 @@ function DashboardContent() {
             <div className="space-y-6">
               <div className="border-b border-slate-800 pb-5">
                 <h2 className="text-xl font-bold text-white">گزارش امور مالی و درآمد کل سامانه کاردینو</h2>
-                <p className="text-xs text-slate-400 mt-1">مشاهده تمامی پرداخت‌های ثبت‌شده مشتریان درگاه‌های کل کشور به تفکیک پرتال.</p>
+                <p className="text-xs text-slate-400 mt-1">مشاهده تمامی پرداخت‌های ثبت‌شده مشتریان درگاه‌های کل کشور به تفکیک پرتال همراه با تایید پرداخت‌های آفلاین.</p>
               </div>
 
               <div className="bg-slate-950 border border-slate-850 rounded-2xl overflow-hidden text-xs">
@@ -2327,22 +2669,75 @@ function DashboardContent() {
                   <thead className="bg-slate-900 text-slate-400 border-b border-slate-800 text-[10px] font-bold">
                     <tr>
                       <th className="p-3">مبلغ کل تراکنش</th>
-                      <th className="p-3">پرتال نماینده ارجاعی</th>
-                      <th className="p-3">درگاه بانکی ثبت‌شده</th>
-                      <th className="p-3">کد رهگیری مرجع بانک</th>
+                      <th className="p-3">پرتال نماینده</th>
+                      <th className="p-3">درگاه پرداخت</th>
+                      <th className="p-3">کد رهگیری / مرجع</th>
                       <th className="p-3">تاریخ ثبت</th>
+                      <th className="p-3">وضعیت</th>
+                      <th className="p-3">جزئیات آفلاین / عملیات</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-850/40 text-slate-300">
                     {transactions.map((tx) => {
                       const associatedTenant = tenants.find(t => toUUID(t.id) === toUUID(tx.tenant_id));
+                      const isOffline = tx.payload?.offline === true || tx.gateway?.includes('آفلاین');
                       return (
-                        <tr key={tx.id} className="hover:bg-slate-900/40">
-                          <td className="p-3 font-bold">{tx.amount.toLocaleString('fa-IR')} تومان</td>
+                        <tr key={tx.id} className="hover:bg-slate-900/40 align-middle">
+                          <td className="p-3 font-bold text-white">{tx.amount.toLocaleString('fa-IR')} تومان</td>
                           <td className="p-3">{associatedTenant?.name || 'سایت اصلی کاردینو'}</td>
-                          <td className="p-3">{tx.gateway}</td>
-                          <td className="p-3 font-mono">{tx.ref_id}</td>
-                          <td className="p-3 opacity-70">{tx.created_at.split('T')[0]}</td>
+                          <td className="p-3">
+                            <span className="px-2 py-1 rounded bg-slate-900 text-slate-300 font-medium">
+                              {tx.gateway}
+                            </span>
+                          </td>
+                          <td className="p-3 font-mono text-slate-200">{tx.ref_id}</td>
+                          <td className="p-3 opacity-70">{tx.created_at ? tx.created_at.split('T')[0] : '-'}</td>
+                          <td className="p-3">
+                            {tx.status === 'success' && (
+                              <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 font-bold rounded-full text-[9px]">
+                                ✓ موفق و تایید شده
+                              </span>
+                            )}
+                            {tx.status === 'failed' && (
+                              <span className="px-2.5 py-1 bg-red-500/10 text-red-400 font-bold rounded-full text-[9px]">
+                                ✕ رد شده
+                              </span>
+                            )}
+                            {tx.status === 'pending' && (
+                              <span className="px-2.5 py-1 bg-amber-500/10 text-amber-400 font-bold rounded-full text-[9px] animate-pulse">
+                                ⏳ در انتظار تایید
+                              </span>
+                            )}
+                          </td>
+                          <td className="p-3">
+                            {isOffline ? (
+                              <div className="space-y-2 py-1">
+                                <div className="p-2 bg-slate-900 rounded-lg text-[10px] text-slate-400 space-y-1">
+                                  <p>🕰️ ساعت واریز: <span className="text-slate-200 font-bold">{tx.payload?.deposit_time || 'نامشخص'}</span></p>
+                                  {tx.payload?.note && <p>✍️ یادداشت: <span className="text-slate-200">{tx.payload?.note}</span></p>}
+                                  {tx.payload?.plan_title && <p>📦 پلن درخواستی: <span className="text-blue-400 font-bold">{tx.payload?.plan_title}</span></p>}
+                                </div>
+                                {tx.status === 'pending' && (
+                                  <div className="flex gap-1.5 pt-1">
+                                    <button
+                                      onClick={() => handleAdminVerifyOfflinePayment(tx, true)}
+                                      className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded text-[9px] transition"
+                                    >
+                                      تایید و فعال‌سازی
+                                    </button>
+                                    <button
+                                      onClick={() => handleAdminVerifyOfflinePayment(tx, false)}
+                                      className="px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded text-[9px] transition"
+                                    >
+                                      رد تراکنش
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-slate-500 text-[10px]">-</span>
+                            )}
+                          </td>
                         </tr>
                       );
                     })}
@@ -3040,6 +3435,142 @@ function DashboardContent() {
                     })}
                   </div>
                 )}
+              </div>
+            );
+          })()}
+
+          {/* ==============================================
+              ADMIN MODE: ALL USERS LIST TAB
+             ============================================== */}
+          {user.role === 'admin' && activeTab === 'admin-users' && (
+            <div className="space-y-6">
+              <div className="border-b border-slate-800 pb-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                  <h2 className="text-xl font-bold text-white">مدیریت کاربران سامانه</h2>
+                  <p className="text-xs text-slate-400 mt-1">مشاهده، نظارت و مدیریت تمامی کاربران عضو شده در سامانه.</p>
+                </div>
+                <div className="text-xs bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 font-bold text-slate-300">
+                  تعداد کل کاربران: <span className="text-blue-400">{allUsers.length}</span>
+                </div>
+              </div>
+
+              {/* Users table */}
+              <div className="bg-slate-950 border border-slate-850 rounded-2xl overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-right text-xs">
+                    <thead className="bg-slate-900 text-slate-400 font-bold border-b border-slate-850">
+                      <tr>
+                        <th className="py-3 px-4">شناسه کاربر</th>
+                        <th className="py-3 px-4">نام و نام خانوادگی</th>
+                        <th className="py-3 px-4">پست الکترونیک (ایمیل)</th>
+                        <th className="py-3 px-4">نقش دسترسی</th>
+                        <th className="py-3 px-4">شناسه نماینده (Tenant ID)</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-900 text-slate-300">
+                      {allUsers.map((u) => {
+                        const associatedTenant = tenants.find(t => toUUID(t.id) === toUUID(u.tenant_id));
+                        return (
+                          <tr key={u.id} className="hover:bg-slate-900/40 transition">
+                            <td className="py-3 px-4 font-mono text-slate-500 text-[10px]">{u.id}</td>
+                            <td className="py-3 px-4 font-bold text-white">{u.first_name || u.last_name ? `${u.first_name || ''} ${u.last_name || ''}`.trim() : 'کاربر بدون نام'}</td>
+                            <td className="py-3 px-4 font-mono text-blue-400">{u.email}</td>
+                            <td className="py-3 px-4">
+                              <span className={`px-2 py-0.5 rounded-full text-[9px] font-black ${
+                                u.role === 'admin' 
+                                  ? 'bg-red-500/10 text-red-400' 
+                                  : u.role === 'tenant' 
+                                    ? 'bg-amber-500/10 text-amber-400' 
+                                    : 'bg-blue-500/10 text-blue-400'
+                              }`}>
+                                {u.role === 'admin' ? 'مدیر ارشد' : u.role === 'tenant' ? 'نماینده' : 'مشتری'}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4">
+                              {u.tenant_id ? (
+                                <span className="text-amber-500 font-bold">{associatedTenant?.name || u.tenant_id}</span>
+                              ) : (
+                                <span className="text-slate-500">پرتال اصلی</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ==============================================
+              ADMIN MODE: PLATFORM ANALYTICS TAB
+             ============================================== */}
+          {user.role === 'admin' && activeTab === 'admin-analytics' && (() => {
+            const totalViews = cards.reduce((sum, c) => sum + (c.views_count || 0), 0);
+            const avgViews = cards.length > 0 ? Math.round(totalViews / cards.length) : 0;
+            const topCard = [...cards].sort((a, b) => (b.views_count || 0) - (a.views_count || 0))[0];
+
+            return (
+              <div className="space-y-6">
+                <div className="border-b border-slate-800 pb-5">
+                  <h2 className="text-xl font-bold text-white">آمار کلی بازدیدهای پلتفرم</h2>
+                  <p className="text-xs text-slate-400 mt-1">مشاهده و تحلیل گزارش‌های زنده بازدید کارت‌های دیجیتال کاربران در کل سیستم.</p>
+                </div>
+
+                {/* Stat cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  <div className="bg-slate-950 border border-slate-850 rounded-2xl p-5 space-y-2">
+                    <span className="text-slate-400 text-xs font-bold block">مجموع کل بازدیدها</span>
+                    <span className="text-3xl font-black text-emerald-400 block">{totalViews.toLocaleString('fa-IR')}</span>
+                    <p className="text-[10px] text-slate-500">تعداد کل دفعات باز شدن کارت‌ها توسط کاربران در سطح وب.</p>
+                  </div>
+                  <div className="bg-slate-950 border border-slate-850 rounded-2xl p-5 space-y-2">
+                    <span className="text-slate-400 text-xs font-bold block">میانگین بازدید هر کارت</span>
+                    <span className="text-3xl font-black text-blue-400 block">{avgViews.toLocaleString('fa-IR')}</span>
+                    <p className="text-[10px] text-slate-500">میانگین آماری تعداد کلیک و بازدید برای هر کارت ویزیت فعال.</p>
+                  </div>
+                  <div className="bg-slate-950 border border-slate-850 rounded-2xl p-5 space-y-2">
+                    <span className="text-slate-400 text-xs font-bold block">محبوب‌ترین کارت ویزیت</span>
+                    {topCard ? (
+                      <>
+                        <span className="text-lg font-black text-amber-400 truncate block">{topCard.first_name} {topCard.last_name}</span>
+                        <p className="text-[10px] text-slate-400">آدرس: <span className="text-blue-400 font-bold font-mono">card/{topCard.slug}</span> ({topCard.views_count?.toLocaleString('fa-IR')} بازدید)</p>
+                      </>
+                    ) : (
+                      <span className="text-slate-500 text-xs block">کارتی یافت نشد</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Popular Cards Table */}
+                <div className="bg-slate-950 border border-slate-850 rounded-2xl p-5 space-y-4">
+                  <h3 className="text-xs font-bold text-white">رتبه‌بندی کارت‌های ویزیت بر اساس بیشترین بازدید</h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-right text-xs">
+                      <thead className="bg-slate-900 text-slate-400 font-bold border-b border-slate-850">
+                        <tr>
+                          <th className="py-3 px-4">رتبه</th>
+                          <th className="py-3 px-4">صاحب کارت</th>
+                          <th className="py-3 px-4">آدرس اختصاصی (Slug)</th>
+                          <th className="py-3 px-4">شغل و شرکت</th>
+                          <th className="py-3 px-4">تعداد بازدیدها</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-900 text-slate-300">
+                        {[...cards].sort((a, b) => (b.views_count || 0) - (a.views_count || 0)).map((card, idx) => (
+                          <tr key={card.id} className="hover:bg-slate-900/40 transition">
+                            <td className="py-3 px-4 font-bold text-blue-500">{(idx + 1).toLocaleString('fa-IR')}#</td>
+                            <td className="py-3 px-4 font-bold text-white">{card.first_name} {card.last_name}</td>
+                            <td className="py-3 px-4 font-mono text-slate-400">/card/{card.slug}</td>
+                            <td className="py-3 px-4 text-slate-400">{card.job_title} | {card.company || 'شخصی'}</td>
+                            <td className="py-3 px-4 text-emerald-400 font-bold">{(card.views_count || 0).toLocaleString('fa-IR')} بازدید</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
             );
           })()}

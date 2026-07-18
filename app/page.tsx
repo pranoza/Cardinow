@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { dbService, Template, Plan } from '../lib/directus';
+import { dbService, Template, Plan, Card } from '../lib/directus';
 import { 
   CreditCard, Smartphone, ShieldCheck, Sparkles, Zap, Award, 
   BarChart3, Globe2, ChevronLeft, ChevronRight, ArrowUpRight, CheckCircle2, 
@@ -13,6 +13,7 @@ export default function LandingPage() {
   const router = useRouter();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
+  const [demoCard, setDemoCard] = useState<Card | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'users' | 'agencies'>('users');
@@ -28,6 +29,16 @@ export default function LandingPage() {
         dbService.getPlans() // Fetch all plans without restricting to tenant-id on the server-side query
       ]);
       setTemplates(fetchedTemplates);
+      
+      // Fetch demo card
+      try {
+        const fetchedDemo = await dbService.getCardBySlug('demo');
+        if (fetchedDemo) {
+          setDemoCard(fetchedDemo);
+        }
+      } catch (demoErr) {
+        console.warn('Could not fetch demo card:', demoErr);
+      }
       
       const targetTenantId = 't-1';
       const targetTenantUuid = 'a1111111-a111-a111-a111-a11111111111';
@@ -68,6 +79,14 @@ export default function LandingPage() {
     setCopiedLink(slug);
     setTimeout(() => setCopiedLink(null), 2000);
   };
+
+  const previewName = demoCard ? `${demoCard.first_name || ''} ${demoCard.last_name || ''}`.trim() : 'مهندس سارا راد';
+  const previewJob = demoCard ? (demoCard.job_title || '') : 'مدیر ارشد محصول (CPO)';
+  const previewCompany = demoCard ? (demoCard.company || '') : 'شرکت دانش بنیان مپنا';
+  const previewBio = demoCard ? (demoCard.bio || '') : 'توسعه‌دهنده محصولات نرم‌افزاری مقیاس‌پذیر و برنده جوایز بین‌المللی طراحی رابط‌های دیجیتال.';
+  const previewProfileImage = demoCard?.profile_image || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&h=200&q=80';
+  const previewCoverImage = demoCard?.cover_image || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80';
+  const previewViewsCount = demoCard ? `${demoCard.views_count} بازدید` : '۴۵۰ بازدید';
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-blue-600 selection:text-white rtl" dir="rtl">
@@ -554,7 +573,7 @@ export default function LandingPage() {
                             {/* Cover photo */}
                             <div className="h-24 bg-slate-300 relative shrink-0">
                               <img 
-                                src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80" 
+                                src={previewCoverImage} 
                                 alt="cover" 
                                 className="w-full h-full object-cover"
                               />
@@ -565,26 +584,26 @@ export default function LandingPage() {
                             <div className="px-4 -mt-8 relative z-10 flex justify-between items-end">
                               <div className="h-16 w-16 rounded-xl border-2 border-white overflow-hidden shadow-sm bg-white">
                                 <img 
-                                  src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&h=200&q=80" 
+                                  src={previewProfileImage} 
                                   alt="profile" 
                                   className="w-full h-full object-cover"
                                 />
                               </div>
                               <span className="text-[8px] bg-slate-200/85 px-2 py-0.5 rounded-full text-slate-600 font-bold">
-                                ۴۵۰ بازدید
+                                {previewViewsCount}
                               </span>
                             </div>
 
                             {/* Info */}
                             <div className="p-4 space-y-4 flex-grow">
                               <div>
-                                <h4 className="text-xs font-black text-slate-900">مهندس سارا راد</h4>
-                                <p className="text-[9px] font-bold text-blue-600 mt-0.5">مدیر ارشد محصول (CPO)</p>
-                                <p className="text-[8px] text-slate-500">شرکت دانش بنیان مپنا</p>
+                                <h4 className="text-xs font-black text-slate-900">{previewName}</h4>
+                                <p className="text-[9px] font-bold text-blue-600 mt-0.5">{previewJob}</p>
+                                <p className="text-[8px] text-slate-500">{previewCompany}</p>
                               </div>
 
                               <div className="p-2.5 bg-white rounded-xl text-[8px] leading-relaxed border border-slate-100 text-slate-600 shadow-sm">
-                                توسعه‌دهنده محصولات نرم‌افزاری مقیاس‌پذیر و برنده جوایز بین‌المللی طراحی رابط‌های دیجیتال.
+                                {previewBio}
                               </div>
 
                               {/* Contact grid */}
@@ -623,7 +642,7 @@ export default function LandingPage() {
                             <div className="space-y-4 pt-4">
                               <div className="flex justify-between items-center text-[8px]">
                                 <span className="px-2 py-0.5 bg-white/10 rounded-full text-slate-300">
-                                  ۱,۲۰۰ بازدید
+                                  {previewViewsCount}
                                 </span>
                                 <span className="text-purple-400 font-extrabold">NEON GLASS</span>
                               </div>
@@ -634,7 +653,7 @@ export default function LandingPage() {
                                   <div className="absolute -inset-1 rounded-full blur bg-gradient-to-r from-purple-500 to-pink-500 opacity-40 animate-pulse"></div>
                                   <div className="h-16 w-16 rounded-full border border-white/30 overflow-hidden relative bg-slate-950">
                                     <img 
-                                      src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&h=200&q=80" 
+                                      src={previewProfileImage} 
                                       alt="profile" 
                                       className="w-full h-full object-cover"
                                     />
@@ -642,13 +661,13 @@ export default function LandingPage() {
                                 </div>
 
                                 <div>
-                                  <h4 className="text-xs font-black text-white">مهندس سارا راد</h4>
-                                  <p className="text-[9px] font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mt-0.5">طراح ارشد محصول</p>
+                                  <h4 className="text-xs font-black text-white">{previewName}</h4>
+                                  <p className="text-[9px] font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mt-0.5">{previewJob}</p>
                                 </div>
                               </div>
 
                               <div className="p-2.5 bg-white/5 rounded-xl text-[8px] leading-relaxed border border-white/10 text-slate-300">
-                                خلق رابط‌های کاربری جذاب مدرن با تلفیق تکنولوژی روز دنیا و ترندهای طراحی شیشه‌ای.
+                                {previewBio}
                               </div>
 
                               {/* Neon Grid */}
@@ -686,7 +705,7 @@ export default function LandingPage() {
                           <div className="w-full min-h-full bg-zinc-50 text-zinc-900 p-4 space-y-4 flex flex-col justify-between">
                             <div className="space-y-4 pt-4">
                               <div className="flex justify-between items-center text-[8px] opacity-50 font-sans">
-                                <span>/sara-rad</span>
+                                <span>{demoCard ? `/${demoCard.slug}` : '/demo'}</span>
                                 <span>MINIMAL</span>
                               </div>
 
@@ -694,20 +713,20 @@ export default function LandingPage() {
                               <div className="flex items-center gap-3 bg-white p-3 rounded-xl border border-zinc-200 shadow-sm">
                                 <div className="h-12 w-12 rounded-full overflow-hidden bg-zinc-100 shrink-0">
                                   <img 
-                                    src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&h=200&q=80" 
+                                    src={previewProfileImage} 
                                     alt="profile" 
                                     className="w-full h-full object-cover"
                                   />
                                 </div>
                                 <div className="text-right">
-                                  <h4 className="text-xs font-black text-zinc-900">سارا راد</h4>
-                                  <p className="text-[8px] font-bold text-zinc-600">مدیر توسعه محصول</p>
-                                  <p className="text-[7px] text-zinc-400">کاردینو</p>
+                                  <h4 className="text-xs font-black text-zinc-900">{previewName}</h4>
+                                  <p className="text-[8px] font-bold text-zinc-600">{previewJob}</p>
+                                  <p className="text-[7px] text-zinc-400">{previewCompany}</p>
                                 </div>
                               </div>
 
                               <p className="text-[8px] leading-relaxed opacity-75 border-r-2 border-zinc-300 pr-2 text-zinc-700">
-                                ساده‌ترین راه برای نمایش هویت کاری شما به دور از شلوغی‌های گرافیکی و با تمرکز صد درصدی بر محتوای متنی.
+                                {previewBio}
                               </p>
 
                               {/* Minimal contact list */}
@@ -751,19 +770,19 @@ export default function LandingPage() {
                               <div className="flex flex-col items-center text-center space-y-2">
                                 <div className="h-16 w-16 rounded-full border-2 border-amber-500 overflow-hidden shadow-lg p-0.5 bg-[#0c0a09]">
                                   <img 
-                                    src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&h=200&q=80" 
+                                    src={previewProfileImage} 
                                     alt="profile" 
                                     className="w-full h-full object-cover rounded-full"
                                   />
                                 </div>
                                 <div>
-                                  <h4 className="text-xs font-black text-amber-100">دکتر مریم آریا</h4>
-                                  <p className="text-[9px] font-bold text-amber-400 mt-0.5">جراح و متخصص پوست و مو</p>
+                                  <h4 className="text-xs font-black text-amber-100">{previewName}</h4>
+                                  <p className="text-[9px] font-bold text-amber-400 mt-0.5">{previewJob}</p>
                                 </div>
                               </div>
 
                               <p className="text-[8px] leading-relaxed text-stone-300 text-center px-2">
-                                خلق زیبایی طبیعی با بکارگیری به‌روزترین متدهای پزشکی و تکنولوژی‌های لیزر نوین جهانی.
+                                {previewBio}
                               </p>
 
                               {/* Luxury Gold Buttons */}

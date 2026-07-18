@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const TARGET_BASE_URL = process.env.NEXT_PUBLIC_DIRECTUS_URL || 'https://directus-production-ec98.up.railway.app';
+let rawBaseUrl = process.env.NEXT_PUBLIC_DIRECTUS_URL || 'https://directus-production-ec98.up.railway.app';
+if (rawBaseUrl && !/^https?:\/\//i.test(rawBaseUrl)) {
+  rawBaseUrl = `https://${rawBaseUrl}`;
+}
+const TARGET_BASE_URL = rawBaseUrl.replace(/\/+$/, '');
 
-async function handleProxy(req: NextRequest, { params }: { params: any }) {
+async function handleProxy(req: NextRequest, { params }: { params: { path?: string[] } }) {
   try {
-    const resolvedParams = await params;
-    const pathSegments = resolvedParams.path || [];
+    const pathSegments = params?.path || [];
     const pathStr = pathSegments.join("/");
 
     // Extract query parameters

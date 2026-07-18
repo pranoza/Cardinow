@@ -71,8 +71,14 @@ export interface Card {
   job_title: string;
   company: string;
   bio: string;
+  neshan?: string | null;
+  waze?: string | null;
+  balad?: string | null;
+  googlemap?: string | null;
   social_links?: {
     phone?: string;
+    mobile?: string;
+    extra_phones?: string[];
     whatsapp?: string;
     telegram?: string;
     instagram?: string;
@@ -127,9 +133,22 @@ export interface AppUser {
 }
 
 // Directus API Base URL
-const DIRECTUS_BASE_URL = typeof window !== 'undefined'
-  ? '/api/directus'
-  : (process.env.NEXT_PUBLIC_DIRECTUS_URL || 'https://directus-production-ec98.up.railway.app');
+const getDirectusBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    return '/api/directus';
+  }
+  let raw = process.env.NEXT_PUBLIC_DIRECTUS_URL || 'https://directus-production-ec98.up.railway.app';
+  if (raw && !/^https?:\/\//i.test(raw)) {
+    raw = `https://${raw}`;
+  }
+  return raw.replace(/\/+$/, '');
+};
+
+const DIRECTUS_BASE_URL = {
+  toString() {
+    return getDirectusBaseUrl();
+  }
+} as any as string;
 
 // SEED DATA
 const SEED_TENANTS: Tenant[] = [
@@ -825,6 +844,19 @@ export const dbService = {
     const json = await res.json();
     return json?.data || [];
   },
+  getAllUsers: async (): Promise<any[]> => {
+    try {
+      const res = await fetch(`${DIRECTUS_BASE_URL}/users`);
+      if (!res.ok) {
+        return SEED_USERS;
+      }
+      const json = await res.json();
+      return json?.data || SEED_USERS;
+    } catch (err) {
+      console.warn('Error fetching users from Directus, using seeds:', err);
+      return SEED_USERS;
+    }
+  },
   logVisit: async (cardId: string, device: string, referrer: string, country: string): Promise<void> => {
     const cleanCardId = toUUID(cardId);
     const newRecord = {
@@ -972,7 +1004,11 @@ export const authService = {
     // Resolve Role
     const rawRole = profile.role || '';
     const resolvedRole: 'customer' | 'tenant' | 'admin' = 
-      (profile.email?.toLowerCase() === 'admin@cardinow.ir' || profile.email?.toLowerCase() === 'admin@brandyar.com' || rawRole === '745c670e-f21a-43de-8a14-0dccf10cb900' || rawRole === 'admin') ? 'admin' :
+      (profile.email?.toLowerCase() === 'admin@cardinow.ir' || 
+       profile.email?.toLowerCase() === 'admin@brandyar.com' || 
+       rawRole === '327ff892-52b4-47fb-939d-8c15473f0f27' || 
+       rawRole === '745c670e-f21a-43de-8a14-0dccf10cb900' || 
+       rawRole === 'admin') ? 'admin' :
       (profile.email?.toLowerCase() === 'tenant@brandyar.com' || rawRole === 'tenant') ? 'tenant' : 'customer';
 
     const session: UserSession = {

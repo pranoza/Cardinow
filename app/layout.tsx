@@ -10,7 +10,7 @@ const vazirmatn = Vazirmatn({
 
 export const metadata: Metadata = {
   title: 'کاردینو (Cardinow)',
-  description: 'سامانه هوشمند طراحی و مدیریت کارت ویزیت دیجیتال متصل به دایرکتوس',
+  description: 'سامانه هوشمند طراحی و مدیریت کارت ویزیت دیجیتال',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
