@@ -459,8 +459,6 @@ function DashboardContent() {
                 <span>ویرایش آنلاین، اطلاعات تماس کامل و دکمه‌های اقدام</span>
               </div>
             </div>
-
-            <p className="text-[10px] text-slate-500 font-medium">سرویس همگام‌ساز دایرکتوس: فعال و متصل</p>
           </div>
 
           {/* Form column */}
