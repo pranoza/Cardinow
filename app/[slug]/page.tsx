@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { dbService, Card, Template } from '../../../lib/directus';
+import { dbService, Card, Template } from '../../lib/directus';
 import { 
   Phone, Mail, Globe, MapPin, Share2, Download, 
   Linkedin, Instagram, Send, MessageCircle, Link as LinkIcon, 
@@ -13,7 +13,7 @@ const getDirectusBaseUrl = () => {
   if (typeof window !== 'undefined') {
     return '/api/directus';
   }
-  let raw = process.env.NEXT_PUBLIC_DIRECTUS_URL || 'https://directus-production-ec98.up.railway.app';
+  let raw = process.env.NEXT_PUBLIC_DIRECTUS_URL || 'http://directus-iuao17eclszuzc06zaqzodkr.89.42.199.190.sslip.io';
   if (raw && !/^https?:\/\//i.test(raw)) {
     raw = `https://${raw}`;
   }
@@ -125,7 +125,7 @@ export default function PublicCardPage() {
           </div>
           <h1 className="text-xl font-bold">خطا در اتصال به سرور!</h1>
           <p className="text-slate-400 text-xs leading-relaxed">
-            امکان ارتباط با پایگاه داده دایرکتوس وجود ندارد. لطفاً اتصال اینترنت خود را بررسی کرده و مجدداً تلاش نمایید.
+            امکان ارتباط با پایگاه داده وجود ندارد. لطفاً اتصال اینترنت خود را بررسی کرده و مجدداً تلاش نمایید.
           </p>
           <button 
             onClick={() => window.location.reload()}

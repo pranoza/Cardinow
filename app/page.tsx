@@ -59,7 +59,7 @@ export default function LandingPage() {
       setPlans(sortedPlans);
     } catch (err: any) {
       console.error('Error fetching landing data:', err);
-      setError('خطا در ارتباط با سرور دایرکتوس. لطفاً اتصال اینترنت خود را بررسی کنید.');
+      setError('خطا در ارتباط با سرور پایگاه داده. لطفاً اتصال اینترنت خود را بررسی کنید.');
     } finally {
       setLoading(false);
     }
@@ -80,7 +80,7 @@ export default function LandingPage() {
   }, []);
 
   const handleCopyDemoLink = (slug: string) => {
-    const fullUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/card/${slug}`;
+    const fullUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/${slug}`;
     navigator.clipboard.writeText(fullUrl);
     setCopiedLink(slug);
     setTimeout(() => setCopiedLink(null), 2000);
@@ -284,7 +284,7 @@ export default function LandingPage() {
                           {copiedLink === 'ali-alavi' ? 'کپی شد!' : 'کپی آدرس کارت'}
                         </button>
                         <button 
-                          onClick={() => router.push('/card/ali-alavi')}
+                          onClick={() => router.push('/ali-alavi')}
                           className="text-blue-400 hover:underline flex items-center font-bold"
                         >
                           مشاهده زنده
@@ -368,7 +368,7 @@ export default function LandingPage() {
               <div className="h-12 w-12 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center shadow-inner">
                 <ShieldCheck className="h-6 w-6" />
               </div>
-              <h3 className="text-lg font-bold text-white">امنیت و پایداری در دایرکتوس</h3>
+              <h3 className="text-lg font-bold text-white">امنیت و پایداری پیشرفته</h3>
               <p className="text-slate-400 text-xs leading-relaxed">
                 اطلاعات شما با استاندارد بالا در پایگاه داده مستقل ذخیره می‌شود که سرعت بارگذاری خارق‌العاده و امنیت ارتباطات را فراهم می‌آورد.
               </p>
@@ -464,7 +464,7 @@ export default function LandingPage() {
             const meta = templateMeta[activeTemplate.slug] || {
               desc: 'قالب سفارشی‌سازی شده و منعطف برای هماهنگی کامل با هویت بصری منحصربه‌فرد کسب‌وکار شما.',
               styleName: activeTemplate.name,
-              features: ['بارگذاری فوق‌العاده سریع به صورت استاتیک', 'پنل تنظیمات کاربری پویا و جامع', 'دسترسی دیتابیس مستقیم دایرکتوس'],
+              features: ['بارگذاری فوق‌العاده سریع به صورت استاتیک', 'پنل تنظیمات کاربری پویا و جامع', 'دسترسی مستقیم و امن به دیتابیس ابری'],
               bgClass: 'bg-slate-900 text-white',
               accentColor: 'bg-blue-500',
               mockCover: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80',

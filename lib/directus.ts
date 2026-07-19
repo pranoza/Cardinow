@@ -137,7 +137,7 @@ const getDirectusBaseUrl = () => {
   if (typeof window !== 'undefined') {
     return '/api/directus';
   }
-  let raw = process.env.NEXT_PUBLIC_DIRECTUS_URL || 'https://directus-production-ec98.up.railway.app';
+  let raw = process.env.NEXT_PUBLIC_DIRECTUS_URL || 'http://directus-iuao17eclszuzc06zaqzodkr.89.42.199.190.sslip.io';
   if (raw && !/^https?:\/\//i.test(raw)) {
     raw = `https://${raw}`;
   }
@@ -455,6 +455,14 @@ export function cleanDataForDirectus(obj: any): any {
   for (const [key, val] of Object.entries(obj)) {
     if (['id', 'user_id', 'tenant_id', 'template_id', 'card_id', 'plan_id'].includes(key) && typeof val === 'string') {
       cleaned[key] = toUUID(val);
+    } else if (['profile_image', 'cover_image'].includes(key)) {
+      if (typeof val === 'string') {
+        const uuidRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+        const match = val.match(uuidRegex);
+        cleaned[key] = match ? match[0] : null;
+      } else {
+        cleaned[key] = val || null;
+      }
     } else if (typeof val === 'object' && val !== null) {
       cleaned[key] = cleanDataForDirectus(val);
     } else {
@@ -607,14 +615,14 @@ export const dbService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(cleanPayload)
     });
-    if (!res.ok) throw new Error('خطا در ذخیره‌سازی اطلاعات نماینده در دایرکتوس');
+    if (!res.ok) throw new Error('خطا در ذخیره‌سازی اطلاعات نماینده در پایگاه داده');
   },
 
   // ---- TEMPLATES ----
   getTemplates: async (): Promise<Template[]> => {
     try {
       const res = await fetch(`${DIRECTUS_BASE_URL}/items/templates`);
-      if (!res.ok) throw new Error('Failed to fetch from Directus');
+      if (!res.ok) throw new Error('Failed to fetch templates from database');
       const json = await res.json();
       const data = json?.data || [];
       if (data.length === 0) return SEED_TEMPLATES;
@@ -652,7 +660,7 @@ export const dbService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(cleanPayload)
     });
-    if (!res.ok) throw new Error('خطا در ذخیره‌سازی قالب در دایرکتوس');
+    if (!res.ok) throw new Error('خطا در ذخیره‌سازی قالب در پایگاه داده');
   },
 
   // ---- PLANS ----
@@ -663,7 +671,7 @@ export const dbService = {
         url += `?filter[tenant_id][_eq]=${toUUID(tenantId)}`;
       }
       const res = await fetch(url);
-      if (!res.ok) throw new Error('Failed to fetch from Directus');
+      if (!res.ok) throw new Error('Failed to fetch plans from database');
       const json = await res.json();
       const data = json?.data || [];
       if (data.length === 0) {
@@ -709,7 +717,7 @@ export const dbService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(cleanPayload)
     });
-    if (!res.ok) throw new Error('خطا در ذخیره‌سازی پلن در دایرکتوس');
+    if (!res.ok) throw new Error('خطا در ذخیره‌سازی پلن در پایگاه داده');
   },
 
   // ---- CARDS ----
@@ -719,14 +727,14 @@ export const dbService = {
       url += `?filter[user_id][_eq]=${toUUID(userId)}`;
     }
     const res = await fetch(url);
-    if (!res.ok) throw new Error('خطا در دریافت اطلاعات کارت‌ها از دایرکتوس');
+    if (!res.ok) throw new Error('خطا در دریافت اطلاعات کارت‌ها از پایگاه داده');
     const json = await res.json();
     return json?.data || [];
   },
   getCardBySlug: async (slug: string): Promise<Card | null> => {
     const url = `${DIRECTUS_BASE_URL}/items/cards?filter[slug][_eq]=${encodeURIComponent(slug)}`;
     const res = await fetch(url);
-    if (!res.ok) throw new Error('خطا در دریافت اطلاعات کارت با اسلاگ از دایرکتوس');
+    if (!res.ok) throw new Error('خطا در دریافت اطلاعات کارت با اسلاگ از پایگاه داده');
     const json = await res.json();
     return json?.data?.[0] || null;
   },
@@ -754,7 +762,7 @@ export const dbService = {
       body: JSON.stringify(cleanPayload)
     });
     if (!res.ok) {
-      let errMsg = 'خطا در ذخیره‌سازی کارت در دایرکتوس';
+      let errMsg = 'خطا در ذخیره‌سازی کارت در پایگاه داده';
       try {
         const errJson = await res.json();
         if (errJson?.errors?.[0]?.message) {
@@ -775,7 +783,7 @@ export const dbService = {
     const res = await fetch(`${DIRECTUS_BASE_URL}/items/cards/${toUUID(id)}`, {
       method: 'DELETE'
     });
-    if (!res.ok) throw new Error('خطا در حذف کارت از دایرکتوس');
+    if (!res.ok) throw new Error('خطا در حذف کارت از پایگاه داده');
   },
 
   // ---- SUBSCRIPTIONS ----
@@ -785,7 +793,7 @@ export const dbService = {
       url += `?filter[user_id][_eq]=${toUUID(userId)}`;
     }
     const res = await fetch(url);
-    if (!res.ok) throw new Error('خطا در دریافت اشتراک‌ها از دایرکتوس');
+    if (!res.ok) throw new Error('خطا در دریافت اشتراک‌ها از پایگاه داده');
     const json = await res.json();
     return json?.data || [];
   },
@@ -805,7 +813,7 @@ export const dbService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(cleanPayload)
     });
-    if (!res.ok) throw new Error('خطا در ذخیره‌سازی اشتراک در دایرکتوس');
+    if (!res.ok) throw new Error('خطا در ذخیره‌سازی اشتراک در پایگاه داده');
   },
 
   // ---- TRANSACTIONS ----
@@ -815,7 +823,7 @@ export const dbService = {
       url += `?filter[user_id][_eq]=${toUUID(userId)}`;
     }
     const res = await fetch(url);
-    if (!res.ok) throw new Error('خطا در دریافت تراکنش‌ها از دایرکتوس');
+    if (!res.ok) throw new Error('خطا در دریافت تراکنش‌ها از پایگاه داده');
     const json = await res.json();
     return json?.data || [];
   },
@@ -835,19 +843,19 @@ export const dbService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(cleanPayload)
     });
-    if (!res.ok) throw new Error('خطا در ذخیره‌سازی تراکنش در دایرکتوس');
+    if (!res.ok) throw new Error('خطا در ذخیره‌سازی تراکنش در پایگاه داده');
   },
 
   // ---- ANALYTICS ----
   getAnalyticsByCard: async (cardId: string): Promise<CardAnalytics[]> => {
     const res = await fetch(`${DIRECTUS_BASE_URL}/items/card_analytics?filter[card_id][_eq]=${toUUID(cardId)}`);
-    if (!res.ok) throw new Error('خطا در دریافت آمار از دایرکتوس');
+    if (!res.ok) throw new Error('خطا در دریافت آمار از پایگاه داده');
     const json = await res.json();
     return json?.data || [];
   },
   getAllAnalytics: async (): Promise<CardAnalytics[]> => {
     const res = await fetch(`${DIRECTUS_BASE_URL}/items/card_analytics`);
-    if (!res.ok) throw new Error('خطا در دریافت آمار کلی از دایرکتوس');
+    if (!res.ok) throw new Error('خطا در دریافت آمار کلی از پایگاه داده');
     const json = await res.json();
     return json?.data || [];
   },
@@ -963,7 +971,7 @@ export const authService = {
       const lookupUrl = `${DIRECTUS_BASE_URL}/users?filter[location][_eq]=${encodeURIComponent(loginId)}`;
       const lookupRes = await fetch(lookupUrl);
       if (!lookupRes.ok) {
-        throw new Error('خطا در ارتباط با سرور دایرکتوس هنگام بررسی شماره موبایل.');
+        throw new Error('خطا در ارتباط با سرور پایگاه داده هنگام بررسی شماره موبایل.');
       }
       const lookupJson = await lookupRes.ok ? await lookupRes.json() : null;
       const apiUser = lookupJson?.data?.[0];
@@ -990,7 +998,7 @@ export const authService = {
     const loginData = await loginRes.json();
     const accessToken = loginData?.data?.access_token;
     if (!accessToken) {
-      throw new Error('خطا در دریافت توکن احراز هویت از دایرکتوس.');
+      throw new Error('خطا در دریافت توکن احراز هویت از پایگاه داده.');
     }
 
     // Fetch full profile info from /users/me using the bearer token
@@ -999,7 +1007,7 @@ export const authService = {
     });
 
     if (!profileRes.ok) {
-      throw new Error('خطا در دریافت اطلاعات کاربری از دایرکتوس.');
+      throw new Error('خطا در دریافت اطلاعات کاربری از پایگاه داده.');
     }
 
     const profileJson = await profileRes.json();
@@ -1034,7 +1042,7 @@ export const authService = {
     // Check if email already exists in Directus /users collection
     const checkEmailRes = await fetch(`${DIRECTUS_BASE_URL}/users?filter[email][_eq]=${encodeURIComponent(email)}`);
     if (!checkEmailRes.ok) {
-      throw new Error('خطا در ارتباط با دایرکتوس هنگام بررسی ایمیل تکراری.');
+      throw new Error('خطا در ارتباط با پایگاه داده هنگام بررسی ایمیل تکراری.');
     }
     const emailJson = await checkEmailRes.json();
     if (emailJson?.data?.length > 0) {
@@ -1044,7 +1052,7 @@ export const authService = {
     // Check if mobile number already exists in 'location' field of /users
     const checkPhoneRes = await fetch(`${DIRECTUS_BASE_URL}/users?filter[location][_eq]=${encodeURIComponent(mobile)}`);
     if (!checkPhoneRes.ok) {
-      throw new Error('خطا در ارتباط با دایرکتوس هنگام بررسی شماره موبایل تکراری.');
+      throw new Error('خطا در ارتباط با پایگاه داده هنگام بررسی شماره موبایل تکراری.');
     }
     const phoneJson = await checkPhoneRes.json();
     if (phoneJson?.data?.length > 0) {
@@ -1071,14 +1079,14 @@ export const authService = {
     
     if (!res.ok) {
       const errorData = await res.json().catch(() => null);
-      const errorMsg = errorData?.errors?.[0]?.message || 'خطا در ثبت مشخصات در پایگاه داده دایرکتوس.';
+      const errorMsg = errorData?.errors?.[0]?.message || 'خطا در ثبت مشخصات در پایگاه داده.';
       throw new Error(errorMsg);
     }
 
     const createdUserData = await res.json();
     const createdUser = createdUserData?.data;
     if (!createdUser) {
-      throw new Error('پاسخ خالی از دایرکتوس پس از ثبت نام.');
+      throw new Error('پاسخ خالی از پایگاه داده پس از ثبت نام.');
     }
 
     const session: UserSession = {

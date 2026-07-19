@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-let rawBaseUrl = process.env.NEXT_PUBLIC_DIRECTUS_URL || 'https://directus-production-ec98.up.railway.app';
+let rawBaseUrl = process.env.NEXT_PUBLIC_DIRECTUS_URL || 'http://directus-iuao17eclszuzc06zaqzodkr.89.42.199.190.sslip.io';
 if (rawBaseUrl && !/^https?:\/\//i.test(rawBaseUrl)) {
   rawBaseUrl = `https://${rawBaseUrl}`;
 }
@@ -63,9 +63,9 @@ async function handleProxy(req: NextRequest, { params }: { params: { path?: stri
       headers: resHeaders,
     });
   } catch (error: any) {
-    console.error("Directus proxy error:", error);
+    console.error("Database proxy error:", error);
     return NextResponse.json(
-      { error: "Failed to communicate with Directus server: " + error.message },
+      { error: "Failed to communicate with database server: " + error.message },
       { status: 502 }
     );
   }
