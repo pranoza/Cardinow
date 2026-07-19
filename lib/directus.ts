@@ -150,6 +150,22 @@ const DIRECTUS_BASE_URL = {
   }
 } as any as string;
 
+// Helper to convert Directus File ID (UUID) or relative path to a fully qualified URL
+export function getImageUrl(idOrUrl: string | null | undefined): string {
+  if (!idOrUrl) return '';
+  // If it is a full URL, base64 data, or relative path that isn't a simple UUID
+  if (/^https?:\/\//i.test(idOrUrl) || idOrUrl.startsWith('data:') || idOrUrl.startsWith('/') || idOrUrl.includes('?')) {
+    return idOrUrl;
+  }
+  // Check if it is a UUID (Directus file ID)
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (uuidRegex.test(idOrUrl)) {
+    const base = getDirectusBaseUrl();
+    return `${base}/assets/${idOrUrl}`;
+  }
+  return idOrUrl;
+}
+
 // SEED DATA
 const SEED_TENANTS: Tenant[] = [
   {

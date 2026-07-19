@@ -19,6 +19,18 @@ export function CustomerBillingView({
   setSimulatedGateway,
   handleInitiatePayment
 }: CustomerBillingViewProps) {
+  const resolvedPlans = Array.isArray(plans) ? plans : [];
+  const userTenantId = user?.tenant_id || 't-1';
+  const userTenantUUID = toUUID(userTenantId);
+
+  const filteredPlans = resolvedPlans.filter((p) => {
+    const planTenantId = p.tenant_id || 't-1';
+    const planTenantUUID = toUUID(planTenantId);
+    return planTenantUUID === userTenantUUID || planTenantId === userTenantId || planTenantId === 't-1' || planTenantUUID === toUUID('t-1');
+  });
+
+  const plansToShow = filteredPlans.length > 0 ? filteredPlans : resolvedPlans;
+
   return (
     <div className="space-y-6">
       <div className="border-b border-slate-800 pb-5">
@@ -43,7 +55,7 @@ export function CustomerBillingView({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
-        {plans.filter(p => toUUID(p.tenant_id) === toUUID(user.tenant_id || 't-1')).map((plan) => (
+        {plansToShow.map((plan) => (
           <div key={plan.id} className="bg-slate-950 border border-slate-850 rounded-2xl p-5 flex flex-col justify-between gap-5 hover:border-blue-600/40 transition">
             <div className="space-y-3">
               <div>

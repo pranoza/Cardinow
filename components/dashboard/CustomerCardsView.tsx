@@ -8,7 +8,7 @@ import {
   Code, Link2, Trash, CheckSquare, Sparkles, HelpCircle, RefreshCw, Star, ArrowRight,
   Phone, Mail, Send, MessageCircle, ChevronLeft, MapPin, Instagram
 } from 'lucide-react';
-import { Card, Template, toUUID } from '../../lib/directus';
+import { Card, Template, toUUID, getImageUrl } from '../../lib/directus';
 
 export interface CustomerCardsViewProps {
   user: any;
@@ -39,6 +39,9 @@ export interface CustomerCardsViewProps {
   handleCopyCardLink: (slug: string) => void;
   handleAddCustomBtn: () => void;
   handleRemoveCustomBtn: (id: string) => void;
+  userSub?: any;
+  userPlan?: any;
+  onNavigateToBilling?: () => void;
 }
 
 export function CustomerCardsView({
@@ -69,7 +72,10 @@ export function CustomerCardsView({
   handleDeleteCard,
   handleCopyCardLink,
   handleAddCustomBtn,
-  handleRemoveCustomBtn
+  handleRemoveCustomBtn,
+  userSub,
+  userPlan,
+  onNavigateToBilling
 }: CustomerCardsViewProps) {
   return (
     <div className="space-y-6">
@@ -113,6 +119,62 @@ export function CustomerCardsView({
             </button>
           </div>
 
+          {/* Prominent Subscription Alert/Banner */}
+          {user.role === 'customer' && (
+            userSub ? (
+              <div className="bg-slate-900 border border-slate-800/80 rounded-2xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+                    <ShieldCheck className="h-5 w-5" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-white">طرح فعال شما:</span>
+                      <span className="text-[10px] bg-emerald-500/20 text-emerald-400 font-extrabold px-2 py-0.5 rounded-md">
+                        {userPlan?.title || 'طرح اختصاصی'}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-slate-400">
+                      شما دسترسی کامل به ابزارهای ساخت کارت و قالب‌ها دارید (اعتبار تا تاریخ: {userSub.end_date})
+                    </p>
+                  </div>
+                </div>
+                {onNavigateToBilling && (
+                  <button
+                    onClick={onNavigateToBilling}
+                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white rounded-xl text-[11px] font-bold transition flex items-center gap-1.5 border border-slate-700 shrink-0 w-full md:w-auto justify-center"
+                  >
+                    <CreditCard className="h-3.5 w-3.5" />
+                    مدیریت یا تمدید اشتراک
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="bg-gradient-to-r from-amber-950/20 to-blue-950/20 border border-amber-900/30 rounded-2xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-lg shadow-amber-950/5">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+                    <Sparkles className="h-5 w-5 animate-pulse" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <h4 className="text-xs font-bold text-amber-400">فاقد اشتراک فعال هستید!</h4>
+                    <p className="text-[10px] text-slate-300">
+                      برای حذف محدودیت تعداد بازدید، فعال‌سازی پیوندهای کارت‌های خود و ویرایش پیشرفته، اشتراک خود را تهیه کنید.
+                    </p>
+                  </div>
+                </div>
+                {onNavigateToBilling && (
+                  <button
+                    onClick={onNavigateToBilling}
+                    className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-extrabold transition flex items-center gap-1.5 shadow shadow-blue-600/20 shrink-0 w-full md:w-auto justify-center"
+                  >
+                    <CreditCard className="h-4 w-4" />
+                    شروع و خرید اشتراک
+                  </button>
+                )}
+              </div>
+            )
+          )}
+
           {cards.length === 0 ? (
             <div className="text-center py-12 border border-dashed border-slate-800 rounded-3xl space-y-4">
               <LayoutGrid className="h-12 w-12 text-slate-600 mx-auto" />
@@ -133,7 +195,7 @@ export function CustomerCardsView({
                     <div className="flex items-start gap-3">
                       <div className="h-14 w-14 rounded-xl bg-slate-900 border border-slate-800 overflow-hidden shrink-0">
                         <img 
-                          src={card.profile_image || 'https://picsum.photos/150/150?random=1'} 
+                          src={getImageUrl(card.profile_image) || 'https://picsum.photos/150/150?random=1'} 
                           alt="avatar" 
                           className="h-full w-full object-cover"
                         />
@@ -337,7 +399,7 @@ export function CustomerCardsView({
                     ) : editingCard.profile_image ? (
                       <>
                         <img 
-                          src={editingCard.profile_image} 
+                          src={getImageUrl(editingCard.profile_image)} 
                           alt="Profile" 
                           className="w-full h-full object-cover rounded" 
                         />
@@ -401,7 +463,7 @@ export function CustomerCardsView({
                     ) : editingCard.cover_image ? (
                       <>
                         <img 
-                          src={editingCard.cover_image} 
+                          src={getImageUrl(editingCard.cover_image)} 
                           alt="Cover" 
                           className="w-full h-full object-cover rounded" 
                         />
@@ -847,7 +909,7 @@ export function CustomerCardsView({
                           <div className="px-3 -mt-6 relative z-10 flex justify-between items-end">
                             <div className="h-14 w-14 rounded-xl border-2 border-white overflow-hidden shadow-sm bg-white">
                               <img 
-                                src={editingCard.profile_image || 'https://picsum.photos/150/150?random=1'} 
+                                src={getImageUrl(editingCard.profile_image) || 'https://picsum.photos/150/150?random=1'} 
                                 alt="profile" 
                                 className="w-full h-full object-cover"
                               />
@@ -929,7 +991,7 @@ export function CustomerCardsView({
                             <div className="flex justify-between items-start">
                               <div className="h-12 w-12 rounded-xl border border-blue-500/30 overflow-hidden shrink-0 bg-zinc-950">
                                 <img 
-                                  src={editingCard.profile_image || 'https://picsum.photos/150/150?random=1'} 
+                                  src={getImageUrl(editingCard.profile_image) || 'https://picsum.photos/150/150?random=1'} 
                                   alt="profile" 
                                   className="w-full h-full object-cover"
                                 />
@@ -992,7 +1054,7 @@ export function CustomerCardsView({
                           <div className="flex flex-col items-center text-center space-y-2 flex-grow">
                             <div className="h-14 w-14 rounded-full overflow-hidden border border-stone-200 p-0.5 bg-white shrink-0">
                               <img 
-                                src={editingCard.profile_image || 'https://picsum.photos/150/150?random=1'} 
+                                src={getImageUrl(editingCard.profile_image) || 'https://picsum.photos/150/150?random=1'} 
                                 alt="profile" 
                                 className="w-full h-full object-cover rounded-full"
                               />
@@ -1062,7 +1124,7 @@ export function CustomerCardsView({
                               </span>
                               <div className="h-10 w-10 rounded-lg border-2 border-amber-500/40 overflow-hidden shrink-0">
                                 <img 
-                                  src={editingCard.profile_image || 'https://picsum.photos/150/150?random=1'} 
+                                  src={getImageUrl(editingCard.profile_image) || 'https://picsum.photos/150/150?random=1'} 
                                   alt="profile" 
                                   className="w-full h-full object-cover"
                                 />
@@ -1151,7 +1213,7 @@ export function CustomerCardsView({
                                 <div className="flex items-center gap-2 pb-1.5 border-b border-slate-100">
                                   <div className="h-10 w-10 overflow-hidden border shrink-0" style={{ borderColor: pColor, borderRadius: isCircleAvatar ? '9999px' : '6px' }}>
                                     <img 
-                                      src={editingCard.profile_image || 'https://picsum.photos/150/150?random=1'} 
+                                      src={getImageUrl(editingCard.profile_image) || 'https://picsum.photos/150/150?random=1'} 
                                       alt="profile" 
                                       className="w-full h-full object-cover"
                                     />
@@ -1165,7 +1227,7 @@ export function CustomerCardsView({
                                 <div className="flex flex-col items-center text-center space-y-1.5">
                                   <div className="h-12 w-12 overflow-hidden border p-0.5" style={{ borderColor: pColor, borderRadius: isCircleAvatar ? '9999px' : '8px' }}>
                                     <img 
-                                      src={editingCard.profile_image || 'https://picsum.photos/150/150?random=1'} 
+                                      src={getImageUrl(editingCard.profile_image) || 'https://picsum.photos/150/150?random=1'} 
                                       alt="profile" 
                                       className="w-full h-full object-cover"
                                       style={{ borderRadius: isCircleAvatar ? '9999px' : '6px' }}

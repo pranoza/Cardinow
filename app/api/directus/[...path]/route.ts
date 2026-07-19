@@ -46,8 +46,8 @@ async function handleProxy(req: NextRequest, { params }: { params: { path?: stri
       body: body,
     });
 
-    // Parse Response
-    const responseBody = await response.text();
+    // Parse Response (using arrayBuffer to preserve binary integrity for files/images)
+    const responseBody = await response.arrayBuffer();
 
     // Return the response with appropriate headers
     const resHeaders = new Headers();

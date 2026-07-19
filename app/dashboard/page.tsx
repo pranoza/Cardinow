@@ -93,18 +93,10 @@ function DashboardContent() {
         throw new Error('شناسه فایل از سرور دیتابیس دریافت نشد.');
       }
 
-      // Construct directus assets URL
-      let rawBaseUrl = process.env.NEXT_PUBLIC_DIRECTUS_URL || 'http://directus-iuao17eclszuzc06zaqzodkr.89.42.199.190.sslip.io';
-      if (rawBaseUrl && !/^https?:\/\//i.test(rawBaseUrl)) {
-        rawBaseUrl = `https://${rawBaseUrl}`;
-      }
-      const cleanedBaseUrl = rawBaseUrl.replace(/\/+$/, '');
-      const fileUrl = `${cleanedBaseUrl}/assets/${fileId}`;
-
       if (type === 'profile') {
-        setEditingCard({ ...editingCard, profile_image: fileUrl });
+        setEditingCard({ ...editingCard, profile_image: fileId });
       } else {
-        setEditingCard({ ...editingCard, cover_image: fileUrl });
+        setEditingCard({ ...editingCard, cover_image: fileId });
       }
     } catch (err: any) {
       alert('خطا در بارگذاری تصویر: ' + err.message);
@@ -1234,6 +1226,9 @@ function DashboardContent() {
               handleCopyCardLink={handleCopyCardLink}
               handleAddCustomBtn={handleAddCustomBtn}
               handleRemoveCustomBtn={handleRemoveCustomBtn}
+              userSub={userSub}
+              userPlan={userPlan}
+              onNavigateToBilling={() => setActiveTab('billing')}
             />
           )}
           {/* ==============================================
