@@ -77,6 +77,8 @@ export function CustomerCardsView({
   userPlan,
   onNavigateToBilling
 }: CustomerCardsViewProps) {
+  const [editorTab, setEditorTab] = React.useState<'info' | 'contact' | 'maps' | 'bank' | 'advanced'>('info');
+
   return (
     <div className="space-y-6">
       
@@ -283,582 +285,712 @@ export function CustomerCardsView({
                 </div>
               </div>
 
-              <button 
+              {/* Save changes button */}
+              <button
+                type="button"
                 onClick={handleSaveCard}
                 disabled={isSavingCard}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800 rounded-xl text-xs font-black text-white transition flex items-center gap-1.5"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800 text-white font-bold rounded-lg text-xs transition flex items-center gap-2 shadow shadow-blue-600/20"
               >
                 {isSavingCard ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-                {isSavingCard ? 'در حال ذخیره...' : 'ذخیره نهایی'}
+                <span>ذخیره تغییرات</span>
+              </button>
+            </div>
+
+            {/* Tabs Navigation (Wizard-like/Responsive Tab Bar) */}
+            <div className="flex border-b border-slate-850 overflow-x-auto no-scrollbar gap-1 pt-1 pb-1 text-[11px] font-bold">
+              <button 
+                type="button"
+                onClick={() => setEditorTab('info')}
+                className={`px-3 py-2 rounded-lg transition shrink-0 flex items-center gap-1.5 ${editorTab === 'info' ? 'bg-blue-600 text-white shadow shadow-blue-600/20' : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'}`}
+              >
+                <User className="h-3.5 w-3.5" />
+                <span>اطلاعات اصلی و ظاهر</span>
+              </button>
+              <button 
+                type="button"
+                onClick={() => setEditorTab('contact')}
+                className={`px-3 py-2 rounded-lg transition shrink-0 flex items-center gap-1.5 ${editorTab === 'contact' ? 'bg-blue-600 text-white shadow shadow-blue-600/20' : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'}`}
+              >
+                <Phone className="h-3.5 w-3.5" />
+                <span>ارتباطات و آدرس</span>
+              </button>
+              <button 
+                type="button"
+                onClick={() => setEditorTab('maps')}
+                className={`px-3 py-2 rounded-lg transition shrink-0 flex items-center gap-1.5 ${editorTab === 'maps' ? 'bg-blue-600 text-white shadow shadow-blue-600/20' : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'}`}
+              >
+                <MapPin className="h-3.5 w-3.5" />
+                <span>مسیریابی نقشه</span>
+              </button>
+              <button 
+                type="button"
+                onClick={() => setEditorTab('bank')}
+                className={`px-3 py-2 rounded-lg transition shrink-0 flex items-center gap-1.5 ${editorTab === 'bank' ? 'bg-blue-600 text-white shadow shadow-blue-600/20' : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'}`}
+              >
+                <CreditCard className="h-3.5 w-3.5" />
+                <span>اطلاعات بانکی</span>
+              </button>
+              <button 
+                type="button"
+                onClick={() => setEditorTab('advanced')}
+                className={`px-3 py-2 rounded-lg transition shrink-0 flex items-center gap-1.5 ${editorTab === 'advanced' ? 'bg-blue-600 text-white shadow shadow-blue-600/20' : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'}`}
+              >
+                <Code className="h-3.5 w-3.5" />
+                <span>دکمه‌ها و پیشرفته</span>
               </button>
             </div>
 
             {/* Editor Form fields */}
             <div className="space-y-4 max-h-[600px] overflow-y-auto pr-1 text-xs">
-              
-              {/* Name & Slug */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-400">نام کوچک:</label>
-                  <input 
-                    type="text" 
-                    value={editingCard.first_name || ''} 
-                    onChange={(e) => setEditingCard({ ...editingCard, first_name: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg focus:border-blue-500 focus:outline-none"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-400">نام خانوادگی:</label>
-                  <input 
-                    type="text" 
-                    value={editingCard.last_name || ''} 
-                    onChange={(e) => setEditingCard({ ...editingCard, last_name: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg focus:border-blue-500 focus:outline-none"
-                  />
-                </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-400">لینک اختصاصی کارت (Slug):</label>
-                  <input 
-                    type="text" 
-                    value={editingCard.slug || ''} 
-                    onChange={(e) => setEditingCard({ ...editingCard, slug: e.target.value.replace(/[^a-zA-Z0-9-]/g, '') })}
-                    className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg focus:border-blue-500 focus:outline-none text-left font-mono"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-400">وضعیت نمایش کارت:</label>
-                  <select 
-                    value={editingCard.status || 'draft'}
-                    onChange={(e) => setEditingCard({ ...editingCard, status: e.target.value as any })}
-                    className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg focus:border-blue-500 focus:outline-none"
-                  >
-                    <option value="draft">پیش‌نویس (خصوصی)</option>
-                    <option value="published">منتشر شده (عمومی)</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Job Info */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-400">سمت شغلی:</label>
-                  <input 
-                    type="text" 
-                    value={editingCard.job_title || ''} 
-                    onChange={(e) => setEditingCard({ ...editingCard, job_title: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg focus:border-blue-500 focus:outline-none"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-400">نام شرکت / برند:</label>
-                  <input 
-                    type="text" 
-                    value={editingCard.company || ''} 
-                    onChange={(e) => setEditingCard({ ...editingCard, company: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg focus:border-blue-500 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              {/* Profile Image & Cover Image Direct Upload */}
-              <div className="grid grid-cols-2 gap-3">
-                {/* Profile Image Direct Upload */}
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-400">تصویر اصلی پروفایل:</label>
-                  <div 
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      if (e.dataTransfer.files?.[0]) {
-                        handleFileUpload(e.dataTransfer.files[0], 'profile');
-                      }
-                    }}
-                    onClick={() => document.getElementById('profile-file-input')?.click()}
-                    className="h-28 border-2 border-dashed border-slate-800 hover:border-blue-500 bg-slate-900 rounded-lg flex flex-col items-center justify-center cursor-pointer transition relative overflow-hidden group p-2 text-center"
-                  >
-                    <input 
-                      id="profile-file-input"
-                      type="file" 
-                      accept="image/*"
-                      onChange={(e) => {
-                        if (e.target.files?.[0]) {
-                          handleFileUpload(e.target.files[0], 'profile');
-                        }
-                      }}
-                      className="hidden" 
-                    />
-                    
-                    {uploadingProfile ? (
-                      <div className="flex flex-col items-center gap-1">
-                        <RefreshCw className="h-6 w-6 text-blue-500 animate-spin" />
-                        <span className="text-[10px] text-slate-400">در حال آپلود...</span>
-                      </div>
-                    ) : editingCard.profile_image ? (
-                      <>
-                        <img 
-                          src={getImageUrl(editingCard.profile_image)} 
-                          alt="Profile" 
-                          className="w-full h-full object-cover rounded" 
-                        />
-                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
-                          <span className="text-[10px] text-white bg-blue-600 px-2 py-1 rounded">تغییر تصویر</span>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="flex flex-col items-center gap-1.5 text-slate-500">
-                        <User className="h-6 w-6" />
-                        <span className="text-[10px] leading-tight">برای بارگذاری کلیک کنید یا بکشید اینجا</span>
-                        <span className="text-[8px] text-slate-600">فرمت‌های مجاز: JPG, PNG</span>
-                      </div>
-                    )}
-                  </div>
-                  {editingCard.profile_image && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditingCard({ ...editingCard, profile_image: '' });
-                      }}
-                      className="text-[10px] text-red-400 hover:underline mt-1"
-                    >
-                      حذف تصویر
-                    </button>
-                  )}
-                </div>
-
-                {/* Cover Image Direct Upload */}
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-400">تصویر کاور:</label>
-                  <div 
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      if (e.dataTransfer.files?.[0]) {
-                        handleFileUpload(e.dataTransfer.files[0], 'cover');
-                      }
-                    }}
-                    onClick={() => document.getElementById('cover-file-input')?.click()}
-                    className="h-28 border-2 border-dashed border-slate-800 hover:border-blue-500 bg-slate-900 rounded-lg flex flex-col items-center justify-center cursor-pointer transition relative overflow-hidden group p-2 text-center"
-                  >
-                    <input 
-                      id="cover-file-input"
-                      type="file" 
-                      accept="image/*"
-                      onChange={(e) => {
-                        if (e.target.files?.[0]) {
-                          handleFileUpload(e.target.files[0], 'cover');
-                        }
-                      }}
-                      className="hidden" 
-                    />
-                    
-                    {uploadingCover ? (
-                      <div className="flex flex-col items-center gap-1">
-                        <RefreshCw className="h-6 w-6 text-blue-500 animate-spin" />
-                        <span className="text-[10px] text-slate-400">در حال آپلود...</span>
-                      </div>
-                    ) : editingCard.cover_image ? (
-                      <>
-                        <img 
-                          src={getImageUrl(editingCard.cover_image)} 
-                          alt="Cover" 
-                          className="w-full h-full object-cover rounded" 
-                        />
-                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
-                          <span className="text-[10px] text-white bg-blue-600 px-2 py-1 rounded">تغییر کاور</span>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="flex flex-col items-center gap-1.5 text-slate-500">
-                        <Palette className="h-6 w-6" />
-                        <span className="text-[10px] leading-tight">برای بارگذاری کلیک کنید یا بکشید اینجا</span>
-                        <span className="text-[8px] text-slate-600">فرمت‌های مجاز: JPG, PNG</span>
-                      </div>
-                    )}
-                  </div>
-                  {editingCard.cover_image && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditingCard({ ...editingCard, cover_image: '' });
-                      }}
-                      className="text-[10px] text-red-400 hover:underline mt-1"
-                    >
-                      حذف تصویر کاور
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Biography */}
-              <div className="space-y-1">
-                <label className="font-bold text-slate-400">درباره من (بیوگرافی):</label>
-                <textarea 
-                  rows={3}
-                  value={editingCard.bio || ''} 
-                  onChange={(e) => setEditingCard({ ...editingCard, bio: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg focus:border-blue-500 focus:outline-none"
-                />
-              </div>
-
-              {/* Choose Visual Template */}
-              <div className="space-y-2">
-                <label className="font-bold text-slate-400 block">انتخاب قالب ظاهری کارت (Template):</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {templates.map((temp) => (
-                    <div 
-                      key={temp.id}
-                      onClick={() => setEditingCard({ ...editingCard, template_id: temp.id })}
-                      className={`p-3 rounded-xl border text-right cursor-pointer transition ${
-                        editingCard.template_id === temp.id 
-                        ? 'border-blue-500 bg-blue-500/10' 
-                        : 'border-slate-850 bg-slate-900/40 hover:bg-slate-900'
-                      }`}
-                    >
-                      <span className="font-bold text-white block text-xs">{temp.name}</span>
-                      <span className="text-[9px] text-slate-400 mt-0.5 block">{temp.is_premium ? 'طرح ویژه (VIP)' : 'طرح استاندارد'}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* CUSTOM COLORS */}
-              <div className="p-4 bg-slate-900/40 border border-slate-850 rounded-xl space-y-3">
-                <h5 className="font-bold text-white text-xs flex items-center gap-1.5">
-                  <Palette className="h-4 w-4 text-blue-400" />
-                  تنظیمات رنگ اختصاصی کارت
-                </h5>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-slate-400 block">رنگ اصلی:</span>
-                    <div className="flex gap-1">
+              {editorTab === 'info' && (
+                <div className="space-y-4 pt-2">
+                  {/* Name & Slug */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-400">نام کوچک:</label>
                       <input 
-                        type="color" 
-                        value={editingCard.custom_colors?.primary || '#3b82f6'} 
-                        onChange={(e) => setEditingCard({
-                          ...editingCard,
-                          custom_colors: { ...(editingCard.custom_colors || {}), primary: e.target.value }
-                        })}
-                        className="h-7 w-7 rounded bg-transparent cursor-pointer"
+                        type="text" 
+                        value={editingCard.first_name || ''} 
+                        onChange={(e) => setEditingCard({ ...editingCard, first_name: e.target.value })}
+                        className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg focus:border-blue-500 focus:outline-none text-white"
                       />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-400">نام خانوادگی:</label>
                       <input 
-                        type="text"
-                        value={editingCard.custom_colors?.primary || '#3b82f6'}
-                        onChange={(e) => setEditingCard({
-                          ...editingCard,
-                          custom_colors: { ...(editingCard.custom_colors || {}), primary: e.target.value }
-                        })}
-                        className="w-full px-1 py-0.5 bg-slate-950 text-[10px] font-mono rounded"
+                        type="text" 
+                        value={editingCard.last_name || ''} 
+                        onChange={(e) => setEditingCard({ ...editingCard, last_name: e.target.value })}
+                        className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg focus:border-blue-500 focus:outline-none text-white"
                       />
                     </div>
                   </div>
 
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-slate-400 block">رنگ پس‌زمینه کارت:</span>
-                    <div className="flex gap-1">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-400">لینک اختصاصی کارت (Slug):</label>
                       <input 
-                        type="color" 
-                        value={editingCard.custom_colors?.card_bg || '#ffffff'} 
-                        onChange={(e) => setEditingCard({
-                          ...editingCard,
-                          custom_colors: { ...(editingCard.custom_colors || {}), card_bg: e.target.value }
-                        })}
-                        className="h-7 w-7 rounded bg-transparent cursor-pointer"
+                        type="text" 
+                        value={editingCard.slug || ''} 
+                        onChange={(e) => setEditingCard({ ...editingCard, slug: e.target.value.replace(/[^a-zA-Z0-9-]/g, '') })}
+                        className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg focus:border-blue-500 focus:outline-none text-left font-mono text-white"
                       />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-400">وضعیت نمایش کارت:</label>
+                      <select 
+                        value={editingCard.status || 'draft'}
+                        onChange={(e) => setEditingCard({ ...editingCard, status: e.target.value as any })}
+                        className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg focus:border-blue-500 focus:outline-none text-white"
+                      >
+                        <option value="draft">پیش‌نویس (خصوصی)</option>
+                        <option value="published">منتشر شده (عمومی)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Job Info */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-400">سمت شغلی:</label>
                       <input 
-                        type="text"
-                        value={editingCard.custom_colors?.card_bg || '#ffffff'}
-                        onChange={(e) => setEditingCard({
-                          ...editingCard,
-                          custom_colors: { ...(editingCard.custom_colors || {}), card_bg: e.target.value }
-                        })}
-                        className="w-full px-1 py-0.5 bg-slate-950 text-[10px] font-mono rounded"
+                        type="text" 
+                        value={editingCard.job_title || ''} 
+                        onChange={(e) => setEditingCard({ ...editingCard, job_title: e.target.value })}
+                        className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg focus:border-blue-500 focus:outline-none text-white"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-400">نام شرکت / برند:</label>
+                      <input 
+                        type="text" 
+                        value={editingCard.company || ''} 
+                        onChange={(e) => setEditingCard({ ...editingCard, company: e.target.value })}
+                        className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg focus:border-blue-500 focus:outline-none text-white"
                       />
                     </div>
                   </div>
 
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-slate-400 block">رنگ کل لندینگ:</span>
-                    <div className="flex gap-1">
-                      <input 
-                        type="color" 
-                        value={editingCard.custom_colors?.background || '#f1f5f9'} 
-                        onChange={(e) => setEditingCard({
-                          ...editingCard,
-                          custom_colors: { ...(editingCard.custom_colors || {}), background: e.target.value }
-                        })}
-                        className="h-7 w-7 rounded bg-transparent cursor-pointer"
-                      />
-                      <input 
-                        type="text"
-                        value={editingCard.custom_colors?.background || '#f1f5f9'}
-                        onChange={(e) => setEditingCard({
-                          ...editingCard,
-                          custom_colors: { ...(editingCard.custom_colors || {}), background: e.target.value }
-                        })}
-                        className="w-full px-1 py-0.5 bg-slate-950 text-[10px] font-mono rounded"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* MAPS LINKS */}
-              <div className="p-4 bg-slate-900/40 border border-slate-850 rounded-xl space-y-3">
-                <h5 className="font-bold text-white text-xs flex items-center gap-1.5">
-                  <MapPin className="h-4 w-4 text-blue-400" />
-                  لینک‌های آدرس روی نقشه (نشان، بلد، ویز و گوگل مپ)
-                </h5>
-                <p className="text-[10px] text-slate-400">لینک مستقیم موقعیت مکانی خود را روی نقشه‌های مختلف قرار دهید تا کاربران بتوانند به راحتی شما را مسیریابی کنند.</p>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-slate-400">نقشه نشان (Neshan):</span>
-                    <input 
-                      type="text" 
-                      value={editingCard.neshan || ''} 
-                      onChange={(e) => setEditingCard({ ...editingCard, neshan: e.target.value })}
-                      placeholder="https://neshan.org/maps/..."
-                      className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded text-[11px] text-left font-mono"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-slate-400">نقشه بلد (Balad):</span>
-                    <input 
-                      type="text" 
-                      value={editingCard.balad || ''} 
-                      onChange={(e) => setEditingCard({ ...editingCard, balad: e.target.value })}
-                      placeholder="https://balad.ir/location?..."
-                      className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded text-[11px] text-left font-mono"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-slate-400">مسیریاب ویز (Waze):</span>
-                    <input 
-                      type="text" 
-                      value={editingCard.waze || ''} 
-                      onChange={(e) => setEditingCard({ ...editingCard, waze: e.target.value })}
-                      placeholder="https://waze.com/ul?..."
-                      className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded text-[11px] text-left font-mono"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-slate-400">گوگل مپ (Google Maps):</span>
-                    <input 
-                      type="text" 
-                      value={editingCard.googlemap || ''} 
-                      onChange={(e) => setEditingCard({ ...editingCard, googlemap: e.target.value })}
-                      placeholder="https://maps.google.com/..."
-                      className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded text-[11px] text-left font-mono"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* SOCIAL LINKS */}
-              <div className="p-4 bg-slate-900/40 border border-slate-850 rounded-xl space-y-3">
-                <h5 className="font-bold text-white text-xs flex items-center gap-1.5">
-                  <Link2 className="h-4 w-4 text-blue-400" />
-                  آدرس شبکه‌های اجتماعی و تماس
-                </h5>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-slate-400">تلفن ثابت:</span>
-                    <input 
-                      type="text" 
-                      value={editingCard.social_links?.phone || ''} 
-                      onChange={(e) => setEditingCard({
-                        ...editingCard,
-                        social_links: { ...(editingCard.social_links || {}), phone: e.target.value }
-                      })}
-                      className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded text-[11px]"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-slate-400">تلفن همراه (موبایل):</span>
-                    <input 
-                      type="text" 
-                      value={editingCard.social_links?.mobile || ''} 
-                      onChange={(e) => setEditingCard({
-                        ...editingCard,
-                        social_links: { ...(editingCard.social_links || {}), mobile: e.target.value }
-                      })}
-                      className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded text-[11px]"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-slate-400">ایمیل:</span>
-                    <input 
-                      type="text" 
-                      value={editingCard.social_links?.email || ''} 
-                      onChange={(e) => setEditingCard({
-                        ...editingCard,
-                        social_links: { ...(editingCard.social_links || {}), email: e.target.value }
-                      })}
-                      className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded text-[11px] text-left font-mono"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-slate-400">تلگرام (بدون @):</span>
-                    <input 
-                      type="text" 
-                      value={editingCard.social_links?.telegram || ''} 
-                      onChange={(e) => setEditingCard({
-                        ...editingCard,
-                        social_links: { ...(editingCard.social_links || {}), telegram: e.target.value }
-                      })}
-                      className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded text-[11px] text-left font-mono"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-slate-400">اینستاگرام (بدون @):</span>
-                    <input 
-                      type="text" 
-                      value={editingCard.social_links?.instagram || ''} 
-                      onChange={(e) => setEditingCard({
-                        ...editingCard,
-                        social_links: { ...(editingCard.social_links || {}), instagram: e.target.value }
-                      })}
-                      className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded text-[11px] text-left font-mono"
-                    />
-                  </div>
-                </div>
-
-                {/* MULTIPLE PHONE NUMBERS */}
-                <div className="border-t border-slate-800 pt-3 space-y-2">
-                  <span className="text-[10px] font-bold text-white block">شماره تماس‌های ثابت/همراه اضافی دیگر:</span>
-                  
-                  <div className="flex gap-2">
-                    <input 
-                      type="text"
-                      placeholder="مثلاً: ۰۲۱۸۸۸۸۸۸۸۸ یا ۰۹۱۲۳۴۵۶۷۸۹"
-                      value={newExtraPhone}
-                      onChange={(e) => setNewExtraPhone(e.target.value)}
-                      className="flex-1 px-2.5 py-1.5 bg-slate-950 border border-slate-850 rounded text-[11px]"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!newExtraPhone.trim()) return;
-                        const currentExtra = editingCard.social_links?.extra_phones || [];
-                        setEditingCard({
-                          ...editingCard,
-                          social_links: {
-                            ...(editingCard.social_links || {}),
-                            extra_phones: [...currentExtra, newExtraPhone.trim()]
+                  {/* Profile Image & Cover Image Direct Upload */}
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Profile Image Direct Upload */}
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-400">تصویر اصلی پروفایل:</label>
+                      <div 
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          if (e.dataTransfer.files?.[0]) {
+                            handleFileUpload(e.dataTransfer.files[0], 'profile');
                           }
-                        });
-                        setNewExtraPhone('');
-                      }}
-                      className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded text-[11px] text-white font-bold transition"
-                    >
-                      افزودن شماره
-                    </button>
+                        }}
+                        onClick={() => document.getElementById('profile-file-input')?.click()}
+                        className="h-28 border-2 border-dashed border-slate-800 hover:border-blue-500 bg-slate-900 rounded-lg flex flex-col items-center justify-center cursor-pointer transition relative overflow-hidden group p-2 text-center"
+                      >
+                        <input 
+                          id="profile-file-input"
+                          type="file" 
+                          accept="image/*"
+                          onChange={(e) => {
+                            if (e.target.files?.[0]) {
+                              handleFileUpload(e.target.files[0], 'profile');
+                            }
+                          }}
+                          className="hidden" 
+                        />
+                        
+                        {uploadingProfile ? (
+                          <div className="flex flex-col items-center gap-1">
+                            <RefreshCw className="h-6 w-6 text-blue-500 animate-spin" />
+                            <span className="text-[10px] text-slate-400">در حال آپلود...</span>
+                          </div>
+                        ) : editingCard.profile_image ? (
+                          <>
+                            <img 
+                              src={getImageUrl(editingCard.profile_image)} 
+                              alt="Profile" 
+                              className="w-full h-full object-cover rounded" 
+                            />
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                              <span className="text-[10px] text-white bg-blue-600 px-2 py-1 rounded">تغییر تصویر</span>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="flex flex-col items-center gap-1.5 text-slate-500">
+                            <User className="h-6 w-6" />
+                            <span className="text-[10px] leading-tight">برای بارگذاری کلیک کنید یا بکشید اینجا</span>
+                            <span className="text-[8px] text-slate-600">فرمت‌های مجاز: JPG, PNG</span>
+                          </div>
+                        )}
+                      </div>
+                      {editingCard.profile_image && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingCard({ ...editingCard, profile_image: '' });
+                          }}
+                          className="text-[10px] text-red-400 hover:underline mt-1"
+                        >
+                          حذف تصویر
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Cover Image Direct Upload */}
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-400">تصویر کاور:</label>
+                      <div 
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          if (e.dataTransfer.files?.[0]) {
+                            handleFileUpload(e.dataTransfer.files[0], 'cover');
+                          }
+                        }}
+                        onClick={() => document.getElementById('cover-file-input')?.click()}
+                        className="h-28 border-2 border-dashed border-slate-800 hover:border-blue-500 bg-slate-900 rounded-lg flex flex-col items-center justify-center cursor-pointer transition relative overflow-hidden group p-2 text-center"
+                      >
+                        <input 
+                          id="cover-file-input"
+                          type="file" 
+                          accept="image/*"
+                          onChange={(e) => {
+                            if (e.target.files?.[0]) {
+                              handleFileUpload(e.target.files[0], 'cover');
+                            }
+                          }}
+                          className="hidden" 
+                        />
+                        
+                        {uploadingCover ? (
+                          <div className="flex flex-col items-center gap-1">
+                            <RefreshCw className="h-6 w-6 text-blue-500 animate-spin" />
+                            <span className="text-[10px] text-slate-400">در حال آپلود...</span>
+                          </div>
+                        ) : editingCard.cover_image ? (
+                          <>
+                            <img 
+                              src={getImageUrl(editingCard.cover_image)} 
+                              alt="Cover" 
+                              className="w-full h-full object-cover rounded" 
+                            />
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                              <span className="text-[10px] text-white bg-blue-600 px-2 py-1 rounded">تغییر کاور</span>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="flex flex-col items-center gap-1.5 text-slate-500">
+                            <Palette className="h-6 w-6" />
+                            <span className="text-[10px] leading-tight">برای بارگذاری کلیک کنید یا بکشید اینجا</span>
+                            <span className="text-[8px] text-slate-600">فرمت‌های مجاز: JPG, PNG</span>
+                          </div>
+                        )}
+                      </div>
+                      {editingCard.cover_image && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingCard({ ...editingCard, cover_image: '' });
+                          }}
+                          className="text-[10px] text-red-400 hover:underline mt-1"
+                        >
+                          حذف تصویر کاور
+                        </button>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-1.5 pt-1">
-                    {(editingCard.social_links?.extra_phones || []).map((ph, idx) => (
-                      <span key={idx} className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-slate-950 border border-slate-800 text-[10px] text-slate-300 rounded-full">
-                        <span>{ph}</span>
+                  {/* Biography */}
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-400">درباره من (بیوگرافی):</label>
+                    <textarea 
+                      rows={3}
+                      value={editingCard.bio || ''} 
+                      onChange={(e) => setEditingCard({ ...editingCard, bio: e.target.value })}
+                      className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg focus:border-blue-500 focus:outline-none text-white"
+                    />
+                  </div>
+
+                  {/* Choose Visual Template */}
+                  <div className="space-y-2">
+                    <label className="font-bold text-slate-400 block">انتخاب قالب ظاهری کارت (Template):</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {templates.map((temp) => (
+                        <div 
+                          key={temp.id}
+                          onClick={() => setEditingCard({ ...editingCard, template_id: temp.id })}
+                          className={`p-3 rounded-xl border text-right cursor-pointer transition ${
+                            editingCard.template_id === temp.id 
+                            ? 'border-blue-500 bg-blue-500/10' 
+                            : 'border-slate-850 bg-slate-900/40 hover:bg-slate-900'
+                          }`}
+                        >
+                          <span className="font-bold text-white block text-xs">{temp.name}</span>
+                          <span className="text-[9px] text-slate-400 mt-0.5 block">{temp.is_premium ? 'طرح ویژه (VIP)' : 'طرح استاندارد'}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* CUSTOM COLORS */}
+                  <div className="p-4 bg-slate-900/40 border border-slate-850 rounded-xl space-y-3">
+                    <h5 className="font-bold text-white text-xs flex items-center gap-1.5">
+                      <Palette className="h-4 w-4 text-blue-400" />
+                      تنظیمات رنگ اختصاصی کارت
+                    </h5>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      <div className="space-y-1">
+                        <span className="text-[10px] text-slate-400 block">رنگ اصلی:</span>
+                        <div className="flex gap-1">
+                          <input 
+                            type="color" 
+                            value={editingCard.custom_colors?.primary || '#3b82f6'} 
+                            onChange={(e) => setEditingCard({
+                              ...editingCard,
+                              custom_colors: { ...(editingCard.custom_colors || {}), primary: e.target.value }
+                            })}
+                            className="h-7 w-7 rounded bg-transparent cursor-pointer"
+                          />
+                          <input 
+                            type="text"
+                            value={editingCard.custom_colors?.primary || '#3b82f6'}
+                            onChange={(e) => setEditingCard({
+                              ...editingCard,
+                              custom_colors: { ...(editingCard.custom_colors || {}), primary: e.target.value }
+                            })}
+                            className="w-full px-1 py-0.5 bg-slate-950 text-[10px] font-mono rounded text-white"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <span className="text-[10px] text-slate-400 block">رنگ پس‌زمینه کارت:</span>
+                        <div className="flex gap-1">
+                          <input 
+                            type="color" 
+                            value={editingCard.custom_colors?.card_bg || '#ffffff'} 
+                            onChange={(e) => setEditingCard({
+                              ...editingCard,
+                              custom_colors: { ...(editingCard.custom_colors || {}), card_bg: e.target.value }
+                            })}
+                            className="h-7 w-7 rounded bg-transparent cursor-pointer"
+                          />
+                          <input 
+                            type="text"
+                            value={editingCard.custom_colors?.card_bg || '#ffffff'}
+                            onChange={(e) => setEditingCard({
+                              ...editingCard,
+                              custom_colors: { ...(editingCard.custom_colors || {}), card_bg: e.target.value }
+                            })}
+                            className="w-full px-1 py-0.5 bg-slate-950 text-[10px] font-mono rounded text-white"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <span className="text-[10px] text-slate-400 block">رنگ کل لندینگ:</span>
+                        <div className="flex gap-1">
+                          <input 
+                            type="color" 
+                            value={editingCard.custom_colors?.background || '#f1f5f9'} 
+                            onChange={(e) => setEditingCard({
+                              ...editingCard,
+                              custom_colors: { ...(editingCard.custom_colors || {}), background: e.target.value }
+                            })}
+                            className="h-7 w-7 rounded bg-transparent cursor-pointer"
+                          />
+                          <input 
+                            type="text"
+                            value={editingCard.custom_colors?.background || '#f1f5f9'}
+                            onChange={(e) => setEditingCard({
+                              ...editingCard,
+                              custom_colors: { ...(editingCard.custom_colors || {}), background: e.target.value }
+                            })}
+                            className="w-full px-1 py-0.5 bg-slate-950 text-[10px] font-mono rounded text-white"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {editorTab === 'contact' && (
+                <div className="space-y-4 pt-2">
+                  {/* SOCIAL LINKS */}
+                  <div className="p-4 bg-slate-900/40 border border-slate-850 rounded-xl space-y-3">
+                    <h5 className="font-bold text-white text-xs flex items-center gap-1.5">
+                      <Link2 className="h-4 w-4 text-blue-400" />
+                      آدرس شبکه‌های اجتماعی و تماس
+                    </h5>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <span className="text-[10px] text-slate-400">تلفن ثابت:</span>
+                        <input 
+                          type="text" 
+                          value={editingCard.social_links?.phone || ''} 
+                          onChange={(e) => setEditingCard({
+                            ...editingCard,
+                            social_links: { ...(editingCard.social_links || {}), phone: e.target.value }
+                          })}
+                          className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded text-[11px] text-white"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <span className="text-[10px] text-slate-400">تلفن همراه (موبایل):</span>
+                        <input 
+                          type="text" 
+                          value={editingCard.social_links?.mobile || ''} 
+                          onChange={(e) => setEditingCard({
+                            ...editingCard,
+                            social_links: { ...(editingCard.social_links || {}), mobile: e.target.value }
+                          })}
+                          className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded text-[11px] text-white"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <span className="text-[10px] text-slate-400">ایمیل:</span>
+                        <input 
+                          type="text" 
+                          value={editingCard.social_links?.email || ''} 
+                          onChange={(e) => setEditingCard({
+                            ...editingCard,
+                            social_links: { ...(editingCard.social_links || {}), email: e.target.value }
+                          })}
+                          className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded text-[11px] text-left font-mono text-white"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <span className="text-[10px] text-slate-400">تلگرام (بدون @):</span>
+                        <input 
+                          type="text" 
+                          value={editingCard.social_links?.telegram || ''} 
+                          onChange={(e) => setEditingCard({
+                            ...editingCard,
+                            social_links: { ...(editingCard.social_links || {}), telegram: e.target.value }
+                          })}
+                          className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded text-[11px] text-left font-mono text-white"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <span className="text-[10px] text-slate-400">اینستاگرام (بدون @):</span>
+                        <input 
+                          type="text" 
+                          value={editingCard.social_links?.instagram || ''} 
+                          onChange={(e) => setEditingCard({
+                            ...editingCard,
+                            social_links: { ...(editingCard.social_links || {}), instagram: e.target.value }
+                          })}
+                          className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded text-[11px] text-left font-mono text-white"
+                        />
+                      </div>
+                    </div>
+
+                    {/* MULTIPLE PHONE NUMBERS */}
+                    <div className="border-t border-slate-800 pt-3 space-y-2">
+                      <span className="text-[10px] font-bold text-white block">شماره تماس‌های ثابت/همراه اضافی دیگر:</span>
+                      
+                      <div className="flex gap-2">
+                        <input 
+                          type="text"
+                          placeholder="مثلاً: ۰۲۱۸۸۸۸۸۸۸۸ یا ۰۹۱۲۳۴۵۶۷۸۹"
+                          value={newExtraPhone}
+                          onChange={(e) => setNewExtraPhone(e.target.value)}
+                          className="flex-grow px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded text-[11px] text-white"
+                        />
                         <button
                           type="button"
                           onClick={() => {
+                            if (!newExtraPhone.trim()) return;
                             const currentExtra = editingCard.social_links?.extra_phones || [];
                             setEditingCard({
                               ...editingCard,
                               social_links: {
                                 ...(editingCard.social_links || {}),
-                                extra_phones: currentExtra.filter((_, i) => i !== idx)
+                                extra_phones: [...currentExtra, newExtraPhone.trim()]
                               }
                             });
+                            setNewExtraPhone('');
                           }}
-                          className="text-red-400 hover:text-red-300 font-bold"
+                          className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded text-[11px] text-white font-bold transition"
                         >
-                          ×
+                          افزودن شماره
                         </button>
-                      </span>
-                    ))}
+                      </div>
+
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {(editingCard.social_links?.extra_phones || []).map((ph, idx) => (
+                          <span key={idx} className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-slate-950 border border-slate-800 text-[10px] text-slate-300 rounded-full">
+                            <span>{ph}</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const currentExtra = editingCard.social_links?.extra_phones || [];
+                                setEditingCard({
+                                  ...editingCard,
+                                  social_links: {
+                                    ...(editingCard.social_links || {}),
+                                    extra_phones: currentExtra.filter((_, i) => i !== idx)
+                                  }
+                                });
+                              }}
+                              className="text-red-400 hover:text-red-300 font-bold"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* PHYSICAL ADDRESS */}
+                  <div className="p-4 bg-slate-900/40 border border-slate-850 rounded-xl space-y-3">
+                    <h5 className="font-bold text-white text-xs flex items-center gap-1.5">
+                      <MapPin className="h-4 w-4 text-blue-400" />
+                      آدرس و نشانی متنی
+                    </h5>
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-400">نشانی دقیق پستی / دفتر کار شما:</label>
+                      <textarea 
+                        rows={3}
+                        value={editingCard.address || ''} 
+                        onChange={(e) => setEditingCard({ ...editingCard, address: e.target.value })}
+                        placeholder="تهران، خیابان ولیعصر، نرسیده به میدان ونک، پلاک ..."
+                        className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg focus:border-blue-500 focus:outline-none text-white text-[11px]"
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
-              {/* CUSTOM BUTTONS CREATOR */}
-              <div className="p-4 bg-slate-900/40 border border-slate-850 rounded-xl space-y-3">
-                <h5 className="font-bold text-white text-xs flex items-center gap-1.5">
-                  <Plus className="h-4 w-4 text-blue-400" />
-                  ایجاد دکمه‌های لینک دلخواه (مانند کاتالوگ، رزومه، وقت قبلی)
-                </h5>
+              {editorTab === 'maps' && (
+                <div className="space-y-4 pt-2">
+                  {/* MAPS LINKS */}
+                  <div className="p-4 bg-slate-900/40 border border-slate-850 rounded-xl space-y-3">
+                    <h5 className="font-bold text-white text-xs flex items-center gap-1.5">
+                      <MapPin className="h-4 w-4 text-blue-400" />
+                      لینک‌های آدرس روی نقشه (نشان، بلد، ویز و گوگل مپ)
+                    </h5>
+                    <p className="text-[10px] text-slate-400">لینک مستقیم موقعیت مکانی خود را روی نقشه‌های مختلف قرار دهید تا کاربران بتوانند به راحتی شما را مسیریابی کنند.</p>
 
-                <div className="space-y-3">
-                  {/* list existing buttons */}
-                  {(editingCard.custom_buttons || []).map((btn) => (
-                    <div key={btn.id} className="flex items-center justify-between bg-slate-950 p-2.5 rounded-lg border border-slate-850 text-[11px]">
-                      <span>{btn.label} <span className="opacity-40 font-mono">({btn.url})</span></span>
-                      <button 
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <span className="text-[10px] text-slate-400">نقشه نشان (Neshan):</span>
+                        <input 
+                          type="text" 
+                          value={editingCard.neshan || ''} 
+                          onChange={(e) => setEditingCard({ ...editingCard, neshan: e.target.value })}
+                          placeholder="https://neshan.org/maps/..."
+                          className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded text-[11px] text-left font-mono text-white"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <span className="text-[10px] text-slate-400">نقشه بلد (Balad):</span>
+                        <input 
+                          type="text" 
+                          value={editingCard.balad || ''} 
+                          onChange={(e) => setEditingCard({ ...editingCard, balad: e.target.value })}
+                          placeholder="https://balad.ir/location?..."
+                          className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded text-[11px] text-left font-mono text-white"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <span className="text-[10px] text-slate-400">مسیریاب ویز (Waze):</span>
+                        <input 
+                          type="text" 
+                          value={editingCard.waze || ''} 
+                          onChange={(e) => setEditingCard({ ...editingCard, waze: e.target.value })}
+                          placeholder="https://waze.com/ul?..."
+                          className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded text-[11px] text-left font-mono text-white"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <span className="text-[10px] text-slate-400">گوگل مپ (Google Maps):</span>
+                        <input 
+                          type="text" 
+                          value={editingCard.googlemap || ''} 
+                          onChange={(e) => setEditingCard({ ...editingCard, googlemap: e.target.value })}
+                          placeholder="https://maps.google.com/..."
+                          className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded text-[11px] text-left font-mono text-white"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {editorTab === 'bank' && (
+                <div className="space-y-4 pt-2">
+                  {/* FINANCIAL INFO */}
+                  <div className="p-4 bg-slate-900/40 border border-slate-850 rounded-xl space-y-3">
+                    <h5 className="font-bold text-white text-xs flex items-center gap-1.5">
+                      <CreditCard className="h-4 w-4 text-blue-400" />
+                      اطلاعات حساب و کارت بانکی
+                    </h5>
+                    <p className="text-[10px] text-slate-400">با افزودن این اطلاعات، مخاطبان به سادگی می‌توانند مبالغ را برای شما کارت به کارت یا انتقال دهند.</p>
+
+                    <div className="space-y-3">
+                      <div className="space-y-1">
+                        <span className="text-[10px] text-slate-400 block font-bold">شماره کارت بانکی (۱۶ رقمی):</span>
+                        <input 
+                          type="text" 
+                          maxLength={19}
+                          value={editingCard.bank_card || ''} 
+                          onChange={(e) => setEditingCard({ ...editingCard, bank_card: e.target.value })}
+                          placeholder="۶۰۳۷۹۹۱۸۱۲۳۴۵۶۷۸"
+                          className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded text-[11px] text-left font-mono text-white"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <span className="text-[10px] text-slate-400 block font-bold">شماره حساب بانکی:</span>
+                        <input 
+                          type="text" 
+                          value={editingCard.bank_account || ''} 
+                          onChange={(e) => setEditingCard({ ...editingCard, bank_account: e.target.value })}
+                          placeholder="مثلاً: ۱-۲۳۴۵۶-..."
+                          className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded text-[11px] text-left font-mono text-white"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <span className="text-[10px] text-slate-400 block font-bold">شماره شبا (IBAN - با IR شروع می‌شود):</span>
+                        <input 
+                          type="text" 
+                          maxLength={26}
+                          value={editingCard.bank_shaba || ''} 
+                          onChange={(e) => setEditingCard({ ...editingCard, bank_shaba: e.target.value })}
+                          placeholder="IR1201200000000123456789"
+                          className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded text-[11px] text-left font-mono text-white"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {editorTab === 'advanced' && (
+                <div className="space-y-4 pt-2">
+                  {/* CUSTOM BUTTONS CREATOR */}
+                  <div className="p-4 bg-slate-900/40 border border-slate-850 rounded-xl space-y-3">
+                    <h5 className="font-bold text-white text-xs flex items-center gap-1.5">
+                      <Plus className="h-4 w-4 text-blue-400" />
+                      ایجاد دکمه‌های لینک دلخواه (مانند کاتالوگ، رزومه، وقت قبلی)
+                    </h5>
+
+                    <div className="space-y-3">
+                      {/* list existing buttons */}
+                      {(editingCard.custom_buttons || []).map((btn) => (
+                        <div key={btn.id} className="flex items-center justify-between bg-slate-950 p-2.5 rounded-lg border border-slate-850 text-[11px]">
+                          <span className="text-white">{btn.label} <span className="opacity-40 font-mono">({btn.url})</span></span>
+                          <button 
+                            type="button"
+                            onClick={() => handleRemoveCustomBtn(btn.id)}
+                            className="text-red-400 hover:text-red-300 font-bold"
+                          >
+                            حذف
+                          </button>
+                        </div>
+                      ))}
+
+                      {/* Inputs row */}
+                      <div className="grid grid-cols-2 gap-2">
+                        <input 
+                          type="text" 
+                          placeholder="عنوان دکمه (مثلا: دانلود کاتالوگ شرکت)"
+                          value={newBtnLabel}
+                          onChange={(e) => setNewBtnLabel(e.target.value)}
+                          className="px-2.5 py-2 bg-slate-900 border border-slate-800 rounded text-[11px] text-white"
+                        />
+                        <input 
+                          type="text" 
+                          placeholder="آدرس لینک (URL)"
+                          value={newBtnUrl}
+                          onChange={(e) => setNewBtnUrl(e.target.value)}
+                          className="px-2.5 py-2 bg-slate-900 border border-slate-800 rounded text-[11px] text-left font-mono text-white"
+                        />
+                      </div>
+
+                      <button
                         type="button"
-                        onClick={() => handleRemoveCustomBtn(btn.id)}
-                        className="text-red-400 hover:text-red-300 font-bold"
+                        onClick={handleAddCustomBtn}
+                        className="w-full py-2 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 rounded-lg text-[10px] font-bold border border-blue-600/20 transition"
                       >
-                        حذف
+                        افزودن دکمه جدید
                       </button>
                     </div>
-                  ))}
-
-                  {/* Inputs row */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <input 
-                      type="text"
-                      placeholder="عنوان دکمه (مثلا: دانلود کاتالوگ شرکت)"
-                      value={newBtnLabel}
-                      onChange={(e) => setNewBtnLabel(e.target.value)}
-                      className="px-2.5 py-2 bg-slate-900 border border-slate-800 rounded text-[11px]"
-                    />
-                    <input 
-                      type="text"
-                      placeholder="آدرس لینک (URL)"
-                      value={newBtnUrl}
-                      onChange={(e) => setNewBtnUrl(e.target.value)}
-                      className="px-2.5 py-2 bg-slate-900 border border-slate-800 rounded text-[11px] text-left font-mono"
-                    />
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={handleAddCustomBtn}
-                    className="w-full py-2 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 rounded-lg text-[10px] font-bold border border-blue-600/20 transition"
-                  >
-                    افزودن دکمه جدید
-                  </button>
+                  {/* CSS CUSTOM BLOCK */}
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-400 flex items-center gap-1.5">
+                      <Code className="h-4 w-4 text-amber-500" />
+                      تزریق کدهای CSS اختصاصی (مخصوص طراحان حرفه‌ای):
+                    </label>
+                    <textarea 
+                      rows={3}
+                      placeholder=".my-card { filter: blur(0px); } ... "
+                      value={editingCard.custom_css || ''} 
+                      onChange={(e) => setEditingCard({ ...editingCard, custom_css: e.target.value })}
+                      className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg focus:border-blue-500 focus:outline-none text-left font-mono text-[11px] text-white"
+                    />
+                  </div>
                 </div>
-              </div>
-
-              {/* CSS CUSTOM BLOCK */}
-              <div className="space-y-1">
-                <label className="font-bold text-slate-400 flex items-center gap-1.5">
-                  <Code className="h-4 w-4 text-amber-500" />
-                  تزریق کدهای CSS اختصاصی (مخصوص طراحان حرفه‌ای):
-                </label>
-                <textarea 
-                  rows={3}
-                  placeholder=".my-card { filter: blur(0px); } ... "
-                  value={editingCard.custom_css || ''} 
-                  onChange={(e) => setEditingCard({ ...editingCard, custom_css: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg focus:border-blue-500 focus:outline-none text-left font-mono text-[11px]"
-                />
-              </div>
+              )}
 
             </div>
           </div>
@@ -1075,6 +1207,49 @@ export function CustomerCardsView({
                               </div>
                             )}
 
+                            {/* Address Section */}
+                            {editingCard.address && (
+                              <div className="space-y-1 pt-1.5 border-t border-slate-200/50">
+                                <h5 className="text-[7.5px] font-bold opacity-60 flex items-center gap-1">
+                                  <MapPin className="h-3 w-3 text-emerald-500 shrink-0" />
+                                  <span>نشانی و دفتر مرکزی</span>
+                                </h5>
+                                <p className="p-2 bg-white/80 border border-slate-200/40 rounded-lg text-[7px] text-slate-700 leading-relaxed text-center">
+                                  {editingCard.address}
+                                </p>
+                              </div>
+                            )}
+
+                            {/* Financial Section */}
+                            {(editingCard.bank_card || editingCard.bank_account || editingCard.bank_shaba) && (
+                              <div className="space-y-1.5 pt-1.5 border-t border-slate-200/50">
+                                <h5 className="text-[7.5px] font-bold opacity-60 flex items-center gap-1">
+                                  <CreditCard className="h-3 w-3 text-[#e2b53e] shrink-0" />
+                                  <span>شماره حساب و کارت</span>
+                                </h5>
+                                <div className="space-y-1">
+                                  {editingCard.bank_card && (
+                                    <div className="p-1.5 bg-white/80 border border-slate-200/40 rounded-lg flex items-center justify-between text-[7px]">
+                                      <span className="opacity-60">کارت:</span>
+                                      <span className="font-mono font-bold text-slate-700">{editingCard.bank_card}</span>
+                                    </div>
+                                  )}
+                                  {editingCard.bank_account && (
+                                    <div className="p-1.5 bg-white/80 border border-slate-200/40 rounded-lg flex items-center justify-between text-[7px]">
+                                      <span className="opacity-60">حساب:</span>
+                                      <span className="font-mono font-bold text-slate-700">{editingCard.bank_account}</span>
+                                    </div>
+                                  )}
+                                  {editingCard.bank_shaba && (
+                                    <div className="p-1.5 bg-white/80 border border-slate-200/40 rounded-lg flex items-center justify-between text-[7px]">
+                                      <span className="opacity-60">شبا:</span>
+                                      <span className="font-mono font-bold text-slate-700" dir="ltr">{editingCard.bank_shaba}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
                           </div>
                         </div>
                       )}
@@ -1085,6 +1260,16 @@ export function CustomerCardsView({
                           <div className="p-3 bg-slate-900/80 border border-white/10 rounded-2xl relative overflow-hidden backdrop-blur space-y-3.5 flex-grow">
                             <div className="absolute top-0 right-0 h-10 w-10 bg-blue-500/10 rounded-full blur-xl"></div>
                             <div className="absolute bottom-0 left-0 h-10 w-10 bg-purple-500/10 rounded-full blur-xl"></div>
+
+                            {/* Cover photo */}
+                            <div className="h-16 bg-slate-800 rounded-xl overflow-hidden relative border border-white/10 shrink-0 shadow-md">
+                              <img 
+                                src={getImageUrl(editingCard.cover_image) || '/cover-fallback.avif'} 
+                                alt="cover" 
+                                className="w-full h-full object-cover"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 to-transparent"></div>
+                            </div>
 
                             <div className="flex justify-between items-start">
                               <div className="h-12 w-12 rounded-xl border border-blue-500/30 overflow-hidden shrink-0 bg-zinc-950">
@@ -1237,6 +1422,49 @@ export function CustomerCardsView({
                               </div>
                             )}
 
+                            {/* Address Section */}
+                            {editingCard.address && (
+                              <div className="space-y-1 pt-1.5 border-t border-white/10">
+                                <h5 className="text-[7.5px] font-bold text-slate-400 flex items-center gap-1">
+                                  <MapPin className="h-3 w-3 text-cyan-400 shrink-0" />
+                                  <span>نشانی و دفتر مرکزی</span>
+                                </h5>
+                                <p className="p-2 bg-white/5 border border-white/5 rounded-lg text-[7px] text-slate-300 leading-relaxed text-center">
+                                  {editingCard.address}
+                                </p>
+                              </div>
+                            )}
+
+                            {/* Financial Section */}
+                            {(editingCard.bank_card || editingCard.bank_account || editingCard.bank_shaba) && (
+                              <div className="space-y-1.5 pt-1.5 border-t border-white/10">
+                                <h5 className="text-[7.5px] font-bold text-slate-400 flex items-center gap-1">
+                                  <CreditCard className="h-3 w-3 text-purple-400 shrink-0" />
+                                  <span>شماره حساب و کارت</span>
+                                </h5>
+                                <div className="space-y-1">
+                                  {editingCard.bank_card && (
+                                    <div className="p-1.5 bg-white/5 border border-white/5 rounded-lg flex items-center justify-between text-[7px]">
+                                      <span className="text-slate-400">کارت:</span>
+                                      <span className="font-mono font-bold text-cyan-400">{editingCard.bank_card}</span>
+                                    </div>
+                                  )}
+                                  {editingCard.bank_account && (
+                                    <div className="p-1.5 bg-white/5 border border-white/5 rounded-lg flex items-center justify-between text-[7px]">
+                                      <span className="text-slate-400">حساب:</span>
+                                      <span className="font-mono font-bold text-cyan-400">{editingCard.bank_account}</span>
+                                    </div>
+                                  )}
+                                  {editingCard.bank_shaba && (
+                                    <div className="p-1.5 bg-white/5 border border-white/5 rounded-lg flex items-center justify-between text-[7px]">
+                                      <span className="text-slate-400">شبا:</span>
+                                      <span className="font-mono font-bold text-cyan-400" dir="ltr">{editingCard.bank_shaba}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
                           </div>
                         </div>
                       )}
@@ -1244,6 +1472,16 @@ export function CustomerCardsView({
                       {/* Minimal Style */}
                       {isMinimal && (
                         <div className="w-full min-h-full bg-stone-50 text-stone-800 p-3.5 space-y-3.5 flex flex-col font-sans overflow-y-auto" style={{ backgroundColor: cardBg, color: textColor }}>
+                          
+                          {/* Cover photo */}
+                          <div className="h-16 rounded-xl overflow-hidden relative bg-stone-100 border border-stone-200 shrink-0">
+                            <img 
+                              src={getImageUrl(editingCard.cover_image) || '/cover-fallback.avif'} 
+                              alt="cover" 
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+
                           <div className="flex flex-col items-center text-center space-y-2 flex-grow">
                             <div className="h-14 w-14 rounded-full overflow-hidden border border-stone-200 p-0.5 bg-white shrink-0 relative">
                               <img 
@@ -1396,6 +1634,49 @@ export function CustomerCardsView({
                               </div>
                             )}
 
+                            {/* Address Section */}
+                            {editingCard.address && (
+                              <div className="w-full space-y-1 pt-1.5 border-t border-stone-200">
+                                <h5 className="text-[7.5px] font-bold text-stone-500 text-right flex items-center gap-1">
+                                  <MapPin className="h-3 w-3 text-stone-500 shrink-0" />
+                                  <span>نشانی و دفتر مرکزی</span>
+                                </h5>
+                                <p className="p-2 bg-stone-100 rounded-lg text-[7px] text-stone-700 leading-relaxed text-center border border-stone-200/50">
+                                  {editingCard.address}
+                                </p>
+                              </div>
+                            )}
+
+                            {/* Financial Section */}
+                            {(editingCard.bank_card || editingCard.bank_account || editingCard.bank_shaba) && (
+                              <div className="w-full space-y-1.5 pt-1.5 border-t border-stone-200">
+                                <h5 className="text-[7.5px] font-bold text-stone-500 text-right flex items-center gap-1">
+                                  <CreditCard className="h-3 w-3 text-stone-600 shrink-0" />
+                                  <span>شماره حساب و کارت</span>
+                                </h5>
+                                <div className="space-y-1">
+                                  {editingCard.bank_card && (
+                                    <div className="p-1.5 bg-stone-100 border border-stone-200 rounded-lg flex items-center justify-between text-[7px] text-stone-700">
+                                      <span className="opacity-70">کارت:</span>
+                                      <span className="font-mono font-bold">{editingCard.bank_card}</span>
+                                    </div>
+                                  )}
+                                  {editingCard.bank_account && (
+                                    <div className="p-1.5 bg-stone-100 border border-stone-200 rounded-lg flex items-center justify-between text-[7px] text-stone-700">
+                                      <span className="opacity-70">حساب:</span>
+                                      <span className="font-mono font-bold">{editingCard.bank_account}</span>
+                                    </div>
+                                  )}
+                                  {editingCard.bank_shaba && (
+                                    <div className="p-1.5 bg-stone-100 border border-stone-200 rounded-lg flex items-center justify-between text-[7px] text-stone-700">
+                                      <span className="opacity-70">شبا:</span>
+                                      <span className="font-mono font-bold" dir="ltr">{editingCard.bank_shaba}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
                           </div>
                         </div>
                       )}
@@ -1405,6 +1686,16 @@ export function CustomerCardsView({
                         <div className="w-full min-h-full bg-stone-950 text-amber-100 p-3.5 space-y-3.5 flex flex-col font-sans overflow-y-auto" style={{ backgroundColor: cardBg, color: textColor }}>
                           <div className="border border-amber-500/20 bg-stone-900/60 p-3 rounded-2xl flex flex-col flex-grow space-y-3.5 relative overflow-hidden">
                             <div className="absolute top-0 right-0 h-16 w-16 bg-amber-500/5 rounded-full blur-2xl"></div>
+
+                            {/* Cover photo */}
+                            <div className="h-16 rounded-xl overflow-hidden relative border border-amber-500/30 shrink-0 shadow-md">
+                              <img 
+                                src={getImageUrl(editingCard.cover_image) || '/cover-fallback.avif'} 
+                                alt="cover" 
+                                className="w-full h-full object-cover"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-stone-950 to-transparent opacity-60"></div>
+                            </div>
 
                             <div className="flex justify-between items-center">
                               <span className="text-[5px] text-amber-500/70 font-mono tracking-widest uppercase border border-amber-500/10 px-2 py-0.5 rounded-full">
@@ -1540,6 +1831,50 @@ export function CustomerCardsView({
                                 ))}
                               </div>
                             )}
+
+                            {/* Address Section */}
+                            {editingCard.address && (
+                              <div className="space-y-1 pt-1.5 border-t border-stone-800/60">
+                                <h5 className="text-[7.5px] font-serif text-amber-500/70 text-right flex items-center gap-1 justify-end">
+                                  <span>نشانی و دفتر مرکزی</span>
+                                  <MapPin className="h-3 w-3 text-amber-500 shrink-0" />
+                                </h5>
+                                <p className="p-2 bg-stone-950/60 border border-amber-500/10 rounded-lg text-[7px] text-stone-200 leading-relaxed text-center">
+                                  {editingCard.address}
+                                </p>
+                              </div>
+                            )}
+
+                            {/* Financial Section */}
+                            {(editingCard.bank_card || editingCard.bank_account || editingCard.bank_shaba) && (
+                              <div className="space-y-1.5 pt-1.5 border-t border-stone-800/60">
+                                <h5 className="text-[7.5px] font-serif text-amber-500/70 text-right flex items-center gap-1 justify-end">
+                                  <span>شماره حساب و کارت VIP</span>
+                                  <CreditCard className="h-3 w-3 text-amber-500 shrink-0" />
+                                </h5>
+                                <div className="space-y-1">
+                                  {editingCard.bank_card && (
+                                    <div className="p-1.5 bg-stone-950/60 border border-amber-500/10 rounded-lg flex items-center justify-between text-[7px] text-stone-200">
+                                      <span className="opacity-50">کارت:</span>
+                                      <span className="font-mono font-bold text-amber-500">{editingCard.bank_card}</span>
+                                    </div>
+                                  )}
+                                  {editingCard.bank_account && (
+                                    <div className="p-1.5 bg-stone-950/60 border border-amber-500/10 rounded-lg flex items-center justify-between text-[7px] text-stone-200">
+                                      <span className="opacity-50">حساب:</span>
+                                      <span className="font-mono font-bold text-amber-500">{editingCard.bank_account}</span>
+                                    </div>
+                                  )}
+                                  {editingCard.bank_shaba && (
+                                    <div className="p-1.5 bg-stone-950/60 border border-amber-500/10 rounded-lg flex items-center justify-between text-[7px] text-stone-200">
+                                      <span className="opacity-50">شبا:</span>
+                                      <span className="font-mono font-bold text-amber-500" dir="ltr">{editingCard.bank_shaba}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
                           </div>
                         </div>
                       )}

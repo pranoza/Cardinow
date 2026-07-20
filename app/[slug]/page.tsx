@@ -6,7 +6,7 @@ import { dbService, Card, Template, getImageUrl } from '../../lib/directus';
 import { 
   Phone, Mail, Globe, MapPin, Share2, Download, 
   Linkedin, Instagram, Send, MessageCircle, Link as LinkIcon, 
-  Eye, Calendar, Check, AlertTriangle, ChevronLeft 
+  Eye, Calendar, Check, AlertTriangle, ChevronLeft, CreditCard, Copy 
 } from 'lucide-react';
 
 const getDirectusBaseUrl = () => {
@@ -28,9 +28,16 @@ export default function PublicCardPage() {
   const [card, setCard] = useState<Card | null>(null);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [copied, setCopied] = useState(false);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
   const [isVCardGenerated, setIsVCardGenerated] = useState(false);
   const [connectionError, setConnectionError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  const handleCopyText = (text: string, fieldName: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedField(fieldName);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
 
   useEffect(() => {
     if (!slug) return;
@@ -424,6 +431,73 @@ export default function PublicCardPage() {
                 </div>
               )}
 
+              {/* Address Section */}
+              {card.address && (
+                <div className="space-y-2 pt-4 border-t border-slate-100">
+                  <h3 className="text-xs font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5">
+                    <MapPin className="h-4 w-4" style={{ color: primaryColor }} />
+                    <span>نشانی و آدرس حضوری</span>
+                  </h3>
+                  <div className="p-4 bg-slate-50 rounded-2xl text-xs leading-relaxed border border-slate-100 font-medium text-slate-700">
+                    {card.address}
+                  </div>
+                </div>
+              )}
+
+              {/* Financial Section */}
+              {(card.bank_card || card.bank_account || card.bank_shaba) && (
+                <div className="space-y-3 pt-4 border-t border-slate-100">
+                  <h3 className="text-xs font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5">
+                    <CreditCard className="h-4 w-4" style={{ color: primaryColor }} />
+                    <span>اطلاعات حساب و کارت بانکی</span>
+                  </h3>
+                  <div className="space-y-2.5">
+                    {card.bank_card && (
+                      <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs">
+                        <div>
+                          <span className="text-[10px] text-slate-400 block mb-1 font-semibold">شماره کارت</span>
+                          <span className="font-mono font-bold tracking-widest text-slate-700">{card.bank_card}</span>
+                        </div>
+                        <button 
+                          onClick={() => handleCopyText(card.bank_card || '', 'bank_card')}
+                          className="p-1.5 hover:bg-slate-200/60 rounded-lg text-slate-500 hover:text-slate-700 transition flex items-center gap-1"
+                        >
+                          {copiedField === 'bank_card' ? <span className="text-[10px] font-bold text-emerald-600">کپی شد!</span> : <Copy className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    )}
+                    {card.bank_account && (
+                      <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs">
+                        <div>
+                          <span className="text-[10px] text-slate-400 block mb-1 font-semibold">شماره حساب</span>
+                          <span className="font-mono font-bold text-slate-700">{card.bank_account}</span>
+                        </div>
+                        <button 
+                          onClick={() => handleCopyText(card.bank_account || '', 'bank_account')}
+                          className="p-1.5 hover:bg-slate-200/60 rounded-lg text-slate-500 hover:text-slate-700 transition flex items-center gap-1"
+                        >
+                          {copiedField === 'bank_account' ? <span className="text-[10px] font-bold text-emerald-600">کپی شد!</span> : <Copy className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    )}
+                    {card.bank_shaba && (
+                      <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs">
+                        <div>
+                          <span className="text-[10px] text-slate-400 block mb-1 font-semibold">شماره شبا (IR)</span>
+                          <span className="font-mono font-bold text-slate-700 text-left" dir="ltr">{card.bank_shaba}</span>
+                        </div>
+                        <button 
+                          onClick={() => handleCopyText(card.bank_shaba || '', 'bank_shaba')}
+                          className="p-1.5 hover:bg-slate-200/60 rounded-lg text-slate-500 hover:text-slate-700 transition flex items-center gap-1"
+                        >
+                          {copiedField === 'bank_shaba' ? <span className="text-[10px] font-bold text-emerald-600">کپی شد!</span> : <Copy className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Footer Powered By */}
               <div className="text-center pt-8 opacity-40 text-[10px]">
                 <span>قدرت گرفته از سامانه کارت ویزیت دیجیتال کاردینو</span>
@@ -443,6 +517,16 @@ export default function PublicCardPage() {
               boxShadow: `0 10px 40px -10px ${primaryColor}40`
             }}
           >
+            {/* Cover photo */}
+            <div className="h-32 bg-slate-800 rounded-2xl overflow-hidden relative border border-white/10 shadow-lg">
+              <img 
+                src={getImageUrl(card.cover_image) || '/cover-fallback.avif'} 
+                alt="cover" 
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 to-transparent"></div>
+            </div>
+
             {/* Header branding info */}
             <div className="flex justify-between items-center">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/10 rounded-full text-xs font-semibold text-slate-300">
@@ -628,6 +712,73 @@ export default function PublicCardPage() {
               </div>
             )}
 
+            {/* Address Section */}
+            {card.address && (
+              <div className="space-y-2 pt-4 border-t border-white/10">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                  <MapPin className="h-4 w-4 text-cyan-400" />
+                  <span>نشانی و آدرس حضوری</span>
+                </h3>
+                <div className="p-4 bg-white/5 rounded-2xl text-xs leading-relaxed border border-white/5 font-medium text-slate-300">
+                  {card.address}
+                </div>
+              </div>
+            )}
+
+            {/* Financial Section */}
+            {(card.bank_card || card.bank_account || card.bank_shaba) && (
+              <div className="space-y-3 pt-4 border-t border-white/10">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                  <CreditCard className="h-4 w-4 text-cyan-400" />
+                  <span>اطلاعات حساب و کارت بانکی</span>
+                </h3>
+                <div className="space-y-2.5">
+                  {card.bank_card && (
+                    <div className="p-3 bg-white/5 rounded-xl border border-white/5 flex items-center justify-between text-xs">
+                      <div>
+                        <span className="text-[10px] text-slate-500 block mb-1 font-semibold">شماره کارت</span>
+                        <span className="font-mono font-bold tracking-widest text-white">{card.bank_card}</span>
+                      </div>
+                      <button 
+                        onClick={() => handleCopyText(card.bank_card || '', 'bank_card')}
+                        className="p-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-slate-300 hover:text-white transition flex items-center gap-1"
+                      >
+                        {copiedField === 'bank_card' ? <span className="text-[10px] font-bold text-emerald-400">کپی شد!</span> : <Copy className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  )}
+                  {card.bank_account && (
+                    <div className="p-3 bg-white/5 rounded-xl border border-white/5 flex items-center justify-between text-xs">
+                      <div>
+                        <span className="text-[10px] text-slate-500 block mb-1 font-semibold">شماره حساب</span>
+                        <span className="font-mono font-bold text-white">{card.bank_account}</span>
+                      </div>
+                      <button 
+                        onClick={() => handleCopyText(card.bank_account || '', 'bank_account')}
+                        className="p-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-slate-300 hover:text-white transition flex items-center gap-1"
+                      >
+                        {copiedField === 'bank_account' ? <span className="text-[10px] font-bold text-emerald-400">کپی شد!</span> : <Copy className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  )}
+                  {card.bank_shaba && (
+                    <div className="p-3 bg-white/5 rounded-xl border border-white/5 flex items-center justify-between text-xs">
+                      <div>
+                        <span className="text-[10px] text-slate-500 block mb-1 font-semibold">شماره شبا (IR)</span>
+                        <span className="font-mono font-bold text-white text-left" dir="ltr">{card.bank_shaba}</span>
+                      </div>
+                      <button 
+                        onClick={() => handleCopyText(card.bank_shaba || '', 'bank_shaba')}
+                        className="p-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-slate-300 hover:text-white transition flex items-center gap-1"
+                      >
+                        {copiedField === 'bank_shaba' ? <span className="text-[10px] font-bold text-emerald-400">کپی شد!</span> : <Copy className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Footer */}
             <div className="text-center pt-8 opacity-30 text-[10px]">
               <span>Powered by Twin Digital Business Card system</span>
@@ -650,6 +801,15 @@ export default function PublicCardPage() {
               >
                 {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Share2 className="h-4 w-4" />}
               </button>
+            </div>
+
+            {/* Cover photo */}
+            <div className="h-28 rounded-2xl overflow-hidden relative bg-slate-100 border border-slate-100 shrink-0">
+              <img 
+                src={getImageUrl(card.cover_image) || '/cover-fallback.avif'} 
+                alt="cover" 
+                className="w-full h-full object-cover"
+              />
             </div>
 
             {/* Portrait Card */}
@@ -793,6 +953,73 @@ export default function PublicCardPage() {
               </div>
             )}
 
+            {/* Address Section */}
+            {card.address && (
+              <div className="space-y-2 pt-2">
+                <h3 className="text-[11px] font-bold tracking-wider uppercase opacity-40 flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5 text-slate-500" />
+                  <span>نشانی و آدرس حضوری</span>
+                </h3>
+                <div className="p-3 bg-slate-50 rounded-xl text-xs leading-relaxed border border-slate-100 font-medium text-slate-700">
+                  {card.address}
+                </div>
+              </div>
+            )}
+
+            {/* Financial Section */}
+            {(card.bank_card || card.bank_account || card.bank_shaba) && (
+              <div className="space-y-2 pt-2">
+                <h3 className="text-[11px] font-bold tracking-wider uppercase opacity-40 flex items-center gap-1.5">
+                  <CreditCard className="h-3.5 w-3.5 text-slate-500" />
+                  <span>اطلاعات حساب و کارت بانکی</span>
+                </h3>
+                <div className="space-y-2">
+                  {card.bank_card && (
+                    <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs">
+                      <div>
+                        <span className="text-[9px] text-slate-400 block mb-0.5 font-semibold">شماره کارت</span>
+                        <span className="font-mono font-bold tracking-widest text-slate-700">{card.bank_card}</span>
+                      </div>
+                      <button 
+                        onClick={() => handleCopyText(card.bank_card || '', 'bank_card')}
+                        className="p-1 hover:bg-slate-200 rounded text-slate-500 hover:text-slate-750 transition flex items-center gap-1"
+                      >
+                        {copiedField === 'bank_card' ? <span className="text-[9px] font-bold text-emerald-600">کپی شد!</span> : <Copy className="h-3.5 w-3.5" />}
+                      </button>
+                    </div>
+                  )}
+                  {card.bank_account && (
+                    <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs">
+                      <div>
+                        <span className="text-[9px] text-slate-400 block mb-0.5 font-semibold">شماره حساب</span>
+                        <span className="font-mono font-bold text-slate-700">{card.bank_account}</span>
+                      </div>
+                      <button 
+                        onClick={() => handleCopyText(card.bank_account || '', 'bank_account')}
+                        className="p-1 hover:bg-slate-200 rounded text-slate-500 hover:text-slate-750 transition flex items-center gap-1"
+                      >
+                        {copiedField === 'bank_account' ? <span className="text-[9px] font-bold text-emerald-600">کپی شد!</span> : <Copy className="h-3.5 w-3.5" />}
+                      </button>
+                    </div>
+                  )}
+                  {card.bank_shaba && (
+                    <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs">
+                      <div>
+                        <span className="text-[9px] text-slate-400 block mb-0.5 font-semibold">شماره شبا (IR)</span>
+                        <span className="font-mono font-bold text-slate-700 text-left" dir="ltr">{card.bank_shaba}</span>
+                      </div>
+                      <button 
+                        onClick={() => handleCopyText(card.bank_shaba || '', 'bank_shaba')}
+                        className="p-1 hover:bg-slate-200 rounded text-slate-500 hover:text-slate-750 transition flex items-center gap-1"
+                      >
+                        {copiedField === 'bank_shaba' ? <span className="text-[9px] font-bold text-emerald-600">کپی شد!</span> : <Copy className="h-3.5 w-3.5" />}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Footer */}
             <div className="text-center pt-8 opacity-20 text-[9px] uppercase tracking-wider font-mono">
               <span>Minimal System // twin-card</span>
@@ -822,6 +1049,16 @@ export default function PublicCardPage() {
               >
                 {copied ? <Check className="h-4 w-4 text-emerald-400" /> : <Share2 className="h-4 w-4" />}
               </button>
+            </div>
+
+            {/* Cover photo */}
+            <div className="h-32 rounded-2xl overflow-hidden relative border border-amber-500/30 shrink-0 shadow-lg grayscale hover:grayscale-0 transition-all duration-500">
+              <img 
+                src={getImageUrl(card.cover_image) || '/cover-fallback.avif'} 
+                alt="cover" 
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-stone-950 to-transparent opacity-60"></div>
             </div>
 
             {/* Portrait Layout */}
@@ -983,6 +1220,73 @@ export default function PublicCardPage() {
                       <span className="font-mono text-stone-200 font-semibold">{ph}</span>
                     </a>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* Address Section */}
+            {card.address && (
+              <div className="space-y-2 pt-4 border-t border-amber-500/15">
+                <h3 className="text-[10px] font-bold uppercase tracking-wider text-stone-500 text-center flex items-center justify-center gap-1.5">
+                  <MapPin className="h-4 w-4 text-[#e2b53e]" />
+                  <span>نشانی و دفتر مرکزی</span>
+                </h3>
+                <div className="p-4 bg-stone-900/60 rounded-2xl text-xs leading-relaxed border border-amber-500/10 text-stone-200 text-center">
+                  {card.address}
+                </div>
+              </div>
+            )}
+
+            {/* Financial Section */}
+            {(card.bank_card || card.bank_account || card.bank_shaba) && (
+              <div className="space-y-3 pt-4 border-t border-amber-500/15">
+                <h3 className="text-[10px] font-bold uppercase tracking-wider text-stone-500 text-center flex items-center justify-center gap-1.5">
+                  <CreditCard className="h-4 w-4 text-[#e2b53e]" />
+                  <span>شماره حساب و کارت VIP</span>
+                </h3>
+                <div className="space-y-2.5">
+                  {card.bank_card && (
+                    <div className="p-3 bg-stone-900/60 rounded-xl border border-amber-500/10 flex items-center justify-between text-xs">
+                      <div>
+                        <span className="text-[9px] text-stone-500 block mb-0.5 font-bold uppercase tracking-wider">شماره کارت</span>
+                        <span className="font-mono font-bold tracking-widest text-[#e2b53e]">{card.bank_card}</span>
+                      </div>
+                      <button 
+                        onClick={() => handleCopyText(card.bank_card || '', 'bank_card')}
+                        className="p-1.5 bg-amber-500/10 hover:bg-amber-500/25 rounded-lg text-[#e2b53e] transition flex items-center gap-1"
+                      >
+                        {copiedField === 'bank_card' ? <span className="text-[9px] font-bold text-emerald-400">کپی شد!</span> : <Copy className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  )}
+                  {card.bank_account && (
+                    <div className="p-3 bg-stone-900/60 rounded-xl border border-amber-500/10 flex items-center justify-between text-xs">
+                      <div>
+                        <span className="text-[9px] text-stone-500 block mb-0.5 font-bold uppercase tracking-wider">شماره حساب</span>
+                        <span className="font-mono font-bold text-[#e2b53e]">{card.bank_account}</span>
+                      </div>
+                      <button 
+                        onClick={() => handleCopyText(card.bank_account || '', 'bank_account')}
+                        className="p-1.5 bg-amber-500/10 hover:bg-amber-500/25 rounded-lg text-[#e2b53e] transition flex items-center gap-1"
+                      >
+                        {copiedField === 'bank_account' ? <span className="text-[9px] font-bold text-emerald-400">کپی شد!</span> : <Copy className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  )}
+                  {card.bank_shaba && (
+                    <div className="p-3 bg-stone-900/60 rounded-xl border border-amber-500/10 flex items-center justify-between text-xs">
+                      <div>
+                        <span className="text-[9px] text-stone-500 block mb-0.5 font-bold uppercase tracking-wider">شماره شبا (IR)</span>
+                        <span className="font-mono font-bold text-[#e2b53e] text-left" dir="ltr">{card.bank_shaba}</span>
+                      </div>
+                      <button 
+                        onClick={() => handleCopyText(card.bank_shaba || '', 'bank_shaba')}
+                        className="p-1.5 bg-amber-500/10 hover:bg-amber-500/25 rounded-lg text-[#e2b53e] transition flex items-center gap-1"
+                      >
+                        {copiedField === 'bank_shaba' ? <span className="text-[9px] font-bold text-emerald-400">کپی شد!</span> : <Copy className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -1185,7 +1489,7 @@ export default function PublicCardPage() {
 
               {/* Footer */}
               <div className="text-center pt-4 opacity-35 text-[8px] uppercase tracking-wider font-mono" style={{ color: txtSecColor }}>
-                <span>{matchedTemp?.name || 'CUSTOM CARD'} {"// POWERED BY BRANDYAR"}</span>
+                <span>{matchedTemp?.name || 'CUSTOM CARD'} {"// POWERED BY CARDINOW"}</span>
               </div>
             </div>
           );

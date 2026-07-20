@@ -168,7 +168,40 @@ function DashboardContent() {
 
       const session = authService.getCurrentUser();
       if (session) {
-        setCards(fetchedCards);
+        // Scoped filtering according to Directus role
+        if (session.role === 'admin') {
+          setCards(fetchedCards);
+          setSubscriptions(fetchedSubscriptions);
+          setTransactions(fetchedTransactions);
+          setAnalytics(fetchedAnalytics);
+        } else if (session.role === 'tenant') {
+          // representatives/tenants see cards under their tenant_id
+          const tenantCards = fetchedCards.filter(c => toUUID(c.tenant_id) === toUUID(session.tenant_id));
+          setCards(tenantCards);
+
+          // subscriptions, transactions and analytics for their tenant's cards
+          const tenantCardIds = tenantCards.map(c => toUUID(c.id));
+          const tenantUsers = allUsers.filter(u => toUUID(u.tenant_id) === toUUID(session.tenant_id)).map(u => toUUID(u.id));
+          
+          setSubscriptions(fetchedSubscriptions.filter(s => tenantUsers.includes(toUUID(s.user_id))));
+          setTransactions(fetchedTransactions.filter(t => tenantUsers.includes(toUUID(t.user_id))));
+          setAnalytics(fetchedAnalytics.filter(a => tenantCardIds.includes(toUUID(a.card_id))));
+        } else {
+          // standard customers ONLY see their own records
+          const userCards = fetchedCards.filter(c => toUUID(c.user_id) === toUUID(session.id));
+          setCards(userCards);
+
+          const userSubs = fetchedSubscriptions.filter(s => toUUID(s.user_id) === toUUID(session.id));
+          setSubscriptions(userSubs);
+
+          const userTx = fetchedTransactions.filter(t => toUUID(t.user_id) === toUUID(session.id));
+          setTransactions(userTx);
+
+          const userCardIds = userCards.map(c => toUUID(c.id));
+          const userAnalytics = fetchedAnalytics.filter(a => userCardIds.includes(toUUID(a.card_id)));
+          setAnalytics(userAnalytics);
+        }
+
         if (session.tenant_id) {
           const tid = session.tenant_id;
           const found = fetchedTenants.find(t => toUUID(t.id) === toUUID(tid));

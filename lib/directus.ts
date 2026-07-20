@@ -75,6 +75,10 @@ export interface Card {
   waze?: string | null;
   balad?: string | null;
   googlemap?: string | null;
+  bank_card?: string | null;
+  bank_account?: string | null;
+  bank_shaba?: string | null;
+  address?: string | null;
   social_links?: {
     phone?: string;
     mobile?: string;
@@ -875,9 +879,34 @@ export const dbService = {
     }
   },
   deleteCard: async (id: string): Promise<void> => {
-    const res = await fetch(`${DIRECTUS_BASE_URL}/items/cards/${toUUID(id)}`, {
+    const cardId = toUUID(id);
+    const authHeaders = getAuthHeaders();
+
+    // 1. Fetch and delete any associated card_analytics to prevent foreign key constraint violations
+    try {
+      const analyticsRes = await fetch(`${DIRECTUS_BASE_URL}/items/card_analytics?filter[card_id][_eq]=${cardId}`, {
+        headers: { ...authHeaders }
+      });
+      if (analyticsRes.ok) {
+        const analyticsJson = await analyticsRes.json();
+        const analyticsList = analyticsJson?.data || [];
+        for (const record of analyticsList) {
+          if (record.id) {
+            await fetch(`${DIRECTUS_BASE_URL}/items/card_analytics/${record.id}`, {
+              method: 'DELETE',
+              headers: { ...authHeaders }
+            });
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to delete associated card_analytics:", e);
+    }
+
+    // 2. Delete the card itself
+    const res = await fetch(`${DIRECTUS_BASE_URL}/items/cards/${cardId}`, {
       method: 'DELETE',
-      headers: { ...getAuthHeaders() }
+      headers: { ...authHeaders }
     });
     if (!res.ok) throw new Error('خطا در حذف کارت از پایگاه داده');
   },
