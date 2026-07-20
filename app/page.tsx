@@ -122,17 +122,10 @@ export default function LandingPage() {
           <div className="flex items-center gap-1.5 md:gap-3">
             <button 
               onClick={() => router.push('/dashboard')}
-              className="px-3 md:px-5 py-1.5 md:py-2 rounded-xl text-[10px] md:text-xs font-bold text-white border border-slate-800 hover:border-slate-700 bg-slate-900 transition flex items-center gap-1"
+              className="px-4 md:px-6 py-1.5 md:py-2 rounded-xl text-[10px] md:text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-600/10 transition flex items-center gap-1"
             >
-              <span className="hidden sm:inline">ورود به پنل</span>
-              <span className="sm:hidden">ورود</span>
+              <span>ورود / ثبت‌نام</span>
               <ChevronLeft className="h-3 w-3 md:h-3.5 md:w-3.5" />
-            </button>
-            <button 
-              onClick={() => router.push('/dashboard?action=register')}
-              className="px-3 md:px-5 py-1.5 md:py-2 rounded-xl text-[10px] md:text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-600/10 transition"
-            >
-              ثبت‌نام
             </button>
             
             {/* Mobile Menu Toggle */}

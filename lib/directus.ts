@@ -122,6 +122,7 @@ export interface UserSession {
   name: string;
   role: 'customer' | 'tenant' | 'admin';
   tenant_id?: string | null; // If role is tenant
+  access_token?: string | null;
 }
 
 export interface AppUser {
@@ -130,6 +131,7 @@ export interface AppUser {
   name: string;
   role: 'customer' | 'tenant' | 'admin';
   tenant_id?: string | null;
+  access_token?: string | null;
 }
 
 // Directus API Base URL
@@ -628,12 +630,31 @@ export async function syncWithDirectus() {
   await seedDirectusIfEmpty();
 }
 
+// HELPER TO GET DIRECTUS AUTHORIZATION HEADERS FOR CURRENT USER
+export function getAuthHeaders(): { [key: string]: string } {
+  if (typeof window === 'undefined') return {};
+  try {
+    const sessionStr = localStorage.getItem('digital_card_session');
+    if (sessionStr) {
+      const session = JSON.parse(sessionStr);
+      if (session && session.access_token) {
+        return { 'Authorization': `Bearer ${session.access_token}` };
+      }
+    }
+  } catch (err) {
+    console.error('Error reading auth session:', err);
+  }
+  return {};
+}
+
 // DATABASE SERVICE
 export const dbService = {
   // ---- TENANTS ----
   getTenants: async (): Promise<Tenant[]> => {
     try {
-      const res = await fetch(`${DIRECTUS_BASE_URL}/items/tenants`);
+      const res = await fetch(`${DIRECTUS_BASE_URL}/items/tenants`, {
+        headers: { ...getAuthHeaders() }
+      });
       if (!res.ok) throw new Error('Failed to fetch from Directus');
       const json = await res.json();
       const data = json?.data || [];
@@ -648,7 +669,9 @@ export const dbService = {
     const cleanId = toUUID(tenant.id);
     
     // Check if exists
-    const check = await fetch(`${DIRECTUS_BASE_URL}/items/tenants/${cleanId}`);
+    const check = await fetch(`${DIRECTUS_BASE_URL}/items/tenants/${cleanId}`, {
+      headers: { ...getAuthHeaders() }
+    });
     const method = check.ok ? 'PATCH' : 'POST';
     const url = check.ok 
       ? `${DIRECTUS_BASE_URL}/items/tenants/${cleanId}`
@@ -656,7 +679,10 @@ export const dbService = {
 
     const res = await fetch(url, {
       method,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      },
       body: JSON.stringify(cleanPayload)
     });
     if (!res.ok) throw new Error('خطا در ذخیره‌سازی اطلاعات نماینده در پایگاه داده');
@@ -665,7 +691,9 @@ export const dbService = {
   // ---- TEMPLATES ----
   getTemplates: async (): Promise<Template[]> => {
     try {
-      const res = await fetch(`${DIRECTUS_BASE_URL}/items/templates`);
+      const res = await fetch(`${DIRECTUS_BASE_URL}/items/templates`, {
+        headers: { ...getAuthHeaders() }
+      });
       if (!res.ok) throw new Error('Failed to fetch templates from database');
       const json = await res.json();
       const data = json?.data || [];
@@ -693,7 +721,9 @@ export const dbService = {
     const cleanPayload = cleanDataForDirectus(template);
     const cleanId = toUUID(template.id);
     
-    const check = await fetch(`${DIRECTUS_BASE_URL}/items/templates/${cleanId}`);
+    const check = await fetch(`${DIRECTUS_BASE_URL}/items/templates/${cleanId}`, {
+        headers: { ...getAuthHeaders() }
+    });
     const method = check.ok ? 'PATCH' : 'POST';
     const url = check.ok 
       ? `${DIRECTUS_BASE_URL}/items/templates/${cleanId}`
@@ -701,7 +731,10 @@ export const dbService = {
 
     const res = await fetch(url, {
       method,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      },
       body: JSON.stringify(cleanPayload)
     });
     if (!res.ok) throw new Error('خطا در ذخیره‌سازی قالب در پایگاه داده');
@@ -714,7 +747,9 @@ export const dbService = {
       if (tenantId) {
         url += `?filter[tenant_id][_eq]=${toUUID(tenantId)}`;
       }
-      const res = await fetch(url);
+      const res = await fetch(url, {
+        headers: { ...getAuthHeaders() }
+      });
       if (!res.ok) throw new Error('Failed to fetch plans from database');
       const json = await res.json();
       const data = json?.data || [];
@@ -750,7 +785,9 @@ export const dbService = {
     await ensureValidTenantId(cleanPayload);
     const cleanId = toUUID(plan.id);
 
-    const check = await fetch(`${DIRECTUS_BASE_URL}/items/plans/${cleanId}`);
+    const check = await fetch(`${DIRECTUS_BASE_URL}/items/plans/${cleanId}`, {
+      headers: { ...getAuthHeaders() }
+    });
     const method = check.ok ? 'PATCH' : 'POST';
     const url = check.ok 
       ? `${DIRECTUS_BASE_URL}/items/plans/${cleanId}`
@@ -758,7 +795,10 @@ export const dbService = {
 
     const res = await fetch(url, {
       method,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      },
       body: JSON.stringify(cleanPayload)
     });
     if (!res.ok) throw new Error('خطا در ذخیره‌سازی پلن در پایگاه داده');
@@ -770,21 +810,27 @@ export const dbService = {
     if (userId) {
       url += `?filter[user_id][_eq]=${toUUID(userId)}`;
     }
-    const res = await fetch(url);
+    const res = await fetch(url, {
+      headers: { ...getAuthHeaders() }
+    });
     if (!res.ok) throw new Error('خطا در دریافت اطلاعات کارت‌ها از پایگاه داده');
     const json = await res.json();
     return json?.data || [];
   },
   getCardBySlug: async (slug: string): Promise<Card | null> => {
     const url = `${DIRECTUS_BASE_URL}/items/cards?filter[slug][_eq]=${encodeURIComponent(slug)}`;
-    const res = await fetch(url);
+    const res = await fetch(url, {
+      headers: { ...getAuthHeaders() }
+    });
     if (!res.ok) throw new Error('خطا در دریافت اطلاعات کارت با اسلاگ از پایگاه داده');
     const json = await res.json();
     return json?.data?.[0] || null;
   },
   getCardById: async (id: string): Promise<Card | null> => {
     const url = `${DIRECTUS_BASE_URL}/items/cards/${toUUID(id)}`;
-    const res = await fetch(url);
+    const res = await fetch(url, {
+      headers: { ...getAuthHeaders() }
+    });
     if (!res.ok) return null;
     const json = await res.json();
     return json?.data || null;
@@ -794,7 +840,9 @@ export const dbService = {
     await ensureValidTenantId(cleanPayload);
     const cleanId = toUUID(card.id);
 
-    const check = await fetch(`${DIRECTUS_BASE_URL}/items/cards/${cleanId}`);
+    const check = await fetch(`${DIRECTUS_BASE_URL}/items/cards/${cleanId}`, {
+      headers: { ...getAuthHeaders() }
+    });
     const method = check.ok ? 'PATCH' : 'POST';
     const url = check.ok 
       ? `${DIRECTUS_BASE_URL}/items/cards/${cleanId}`
@@ -802,7 +850,10 @@ export const dbService = {
 
     const res = await fetch(url, {
       method,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      },
       body: JSON.stringify(cleanPayload)
     });
     if (!res.ok) {
@@ -825,7 +876,8 @@ export const dbService = {
   },
   deleteCard: async (id: string): Promise<void> => {
     const res = await fetch(`${DIRECTUS_BASE_URL}/items/cards/${toUUID(id)}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: { ...getAuthHeaders() }
     });
     if (!res.ok) throw new Error('خطا در حذف کارت از پایگاه داده');
   },
@@ -836,7 +888,9 @@ export const dbService = {
     if (userId) {
       url += `?filter[user_id][_eq]=${toUUID(userId)}`;
     }
-    const res = await fetch(url);
+    const res = await fetch(url, {
+      headers: { ...getAuthHeaders() }
+    });
     if (!res.ok) throw new Error('خطا در دریافت اشتراک‌ها از پایگاه داده');
     const json = await res.json();
     return json?.data || [];
@@ -846,7 +900,9 @@ export const dbService = {
     await ensureValidTenantId(cleanPayload);
     const cleanId = toUUID(sub.id);
 
-    const check = await fetch(`${DIRECTUS_BASE_URL}/items/subscriptions/${cleanId}`);
+    const check = await fetch(`${DIRECTUS_BASE_URL}/items/subscriptions/${cleanId}`, {
+      headers: { ...getAuthHeaders() }
+    });
     const method = check.ok ? 'PATCH' : 'POST';
     const url = check.ok 
       ? `${DIRECTUS_BASE_URL}/items/subscriptions/${cleanId}`
@@ -854,7 +910,10 @@ export const dbService = {
 
     const res = await fetch(url, {
       method,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      },
       body: JSON.stringify(cleanPayload)
     });
     if (!res.ok) throw new Error('خطا در ذخیره‌سازی اشتراک در پایگاه داده');
@@ -866,7 +925,9 @@ export const dbService = {
     if (userId) {
       url += `?filter[user_id][_eq]=${toUUID(userId)}`;
     }
-    const res = await fetch(url);
+    const res = await fetch(url, {
+      headers: { ...getAuthHeaders() }
+    });
     if (!res.ok) throw new Error('خطا در دریافت تراکنش‌ها از پایگاه داده');
     const json = await res.json();
     return json?.data || [];
@@ -876,7 +937,9 @@ export const dbService = {
     await ensureValidTenantId(cleanPayload);
     const cleanId = toUUID(tx.id);
 
-    const check = await fetch(`${DIRECTUS_BASE_URL}/items/transactions/${cleanId}`);
+    const check = await fetch(`${DIRECTUS_BASE_URL}/items/transactions/${cleanId}`, {
+      headers: { ...getAuthHeaders() }
+    });
     const method = check.ok ? 'PATCH' : 'POST';
     const url = check.ok 
       ? `${DIRECTUS_BASE_URL}/items/transactions/${cleanId}`
@@ -884,7 +947,10 @@ export const dbService = {
 
     const res = await fetch(url, {
       method,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      },
       body: JSON.stringify(cleanPayload)
     });
     if (!res.ok) throw new Error('خطا در ذخیره‌سازی تراکنش در پایگاه داده');
@@ -892,20 +958,26 @@ export const dbService = {
 
   // ---- ANALYTICS ----
   getAnalyticsByCard: async (cardId: string): Promise<CardAnalytics[]> => {
-    const res = await fetch(`${DIRECTUS_BASE_URL}/items/card_analytics?filter[card_id][_eq]=${toUUID(cardId)}`);
+    const res = await fetch(`${DIRECTUS_BASE_URL}/items/card_analytics?filter[card_id][_eq]=${toUUID(cardId)}`, {
+      headers: { ...getAuthHeaders() }
+    });
     if (!res.ok) throw new Error('خطا در دریافت آمار از پایگاه داده');
     const json = await res.json();
     return json?.data || [];
   },
   getAllAnalytics: async (): Promise<CardAnalytics[]> => {
-    const res = await fetch(`${DIRECTUS_BASE_URL}/items/card_analytics`);
+    const res = await fetch(`${DIRECTUS_BASE_URL}/items/card_analytics`, {
+      headers: { ...getAuthHeaders() }
+    });
     if (!res.ok) throw new Error('خطا در دریافت آمار کلی از پایگاه داده');
     const json = await res.json();
     return json?.data || [];
   },
   getAllUsers: async (): Promise<any[]> => {
     try {
-      const res = await fetch(`${DIRECTUS_BASE_URL}/users`);
+      const res = await fetch(`${DIRECTUS_BASE_URL}/users`, {
+        headers: { ...getAuthHeaders() }
+      });
       if (!res.ok) {
         return SEED_USERS;
       }
@@ -1075,7 +1147,8 @@ export const authService = {
       email: profile.email,
       name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'کاربر کاردینو',
       role: resolvedRole,
-      tenant_id: profile.tenant_id || toUUID('t-1')
+      tenant_id: profile.tenant_id || toUUID('t-1'),
+      access_token: accessToken
     };
 
     localStorage.setItem('digital_card_session', JSON.stringify(session));
@@ -1131,6 +1204,16 @@ export const authService = {
     const createdUser = createdUserData?.data;
     if (!createdUser) {
       throw new Error('پاسخ خالی از پایگاه داده پس از ثبت نام.');
+    }
+
+    try {
+      // Automatically login to retrieve the Directus JWT access_token and full session details
+      const resolvedSession = await authService.login(email, password);
+      if (resolvedSession) {
+        return resolvedSession;
+      }
+    } catch (loginErr) {
+      console.warn('Auto login after registration failed:', loginErr);
     }
 
     const session: UserSession = {

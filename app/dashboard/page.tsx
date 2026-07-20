@@ -168,11 +168,7 @@ function DashboardContent() {
 
       const session = authService.getCurrentUser();
       if (session) {
-        if (session.role === 'customer') {
-          setCards(fetchedCards.filter(c => toUUID(c.user_id) === toUUID(session.id)));
-        } else {
-          setCards(fetchedCards);
-        }
+        setCards(fetchedCards);
         if (session.tenant_id) {
           const tid = session.tenant_id;
           const found = fetchedTenants.find(t => toUUID(t.id) === toUUID(tid));
