@@ -397,6 +397,35 @@
         "nullable": true,
         "is_primary_key": false,
         "note": null
+      },
+      "receipt_Image": {
+        "type": "uuid",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": "تصویر رسید پرداخت کارت به کارت"
+      }
+    }
+  },
+  "site_settings": {
+    "note": "تنظیمات کلی سیستم (تک‌رکورد)",
+    "fields": {
+      "id": {
+        "type": "integer",
+        "nullable": false,
+        "is_primary_key": true,
+        "note": null
+      },
+      "bank_card": {
+        "type": "string",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": "شماره کارت بانکی برای پرداخت آفلاین"
+      },
+      "bank_name": {
+        "type": "string",
+        "nullable": true,
+        "is_primary_key": false,
+        "note": "نام دارنده حساب یا بانک"
       }
     }
   }

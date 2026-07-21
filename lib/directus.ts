@@ -55,6 +55,7 @@ export interface Transaction {
   status: 'success' | 'failed' | 'pending';
   payload?: any | null;
   created_at: string;
+  receipt_Image?: string | null;
 }
 
 export interface Card {
@@ -525,7 +526,7 @@ export function cleanDataForDirectus(obj: any): any {
   for (const [key, val] of Object.entries(obj)) {
     if (['id', 'user_id', 'tenant_id', 'template_id', 'card_id', 'plan_id'].includes(key) && typeof val === 'string') {
       cleaned[key] = toUUID(val);
-    } else if (['profile_image', 'cover_image'].includes(key)) {
+    } else if (['profile_image', 'cover_image', 'receipt_Image'].includes(key)) {
       if (typeof val === 'string') {
         const uuidRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
         const match = val.match(uuidRegex);
@@ -577,7 +578,9 @@ export function parseCardFields(card: any): Card {
 export async function ensureValidTenantId(payload: any): Promise<void> {
   if (payload && payload.tenant_id) {
     try {
-      const res = await fetch(`${DIRECTUS_BASE_URL}/items/tenants`);
+      const res = await fetch(`${DIRECTUS_BASE_URL}/items/tenants`, {
+        headers: { ...getAuthHeaders() }
+      });
       if (res.ok) {
         const json = await res.json();
         const tenantsList = json?.data || [];
@@ -1026,15 +1029,105 @@ export const dbService = {
       ? `${DIRECTUS_BASE_URL}/items/transactions/${cleanId}`
       : `${DIRECTUS_BASE_URL}/items/transactions`;
 
+    // Only map and send fields that strictly exist in the transactions database collection schema
+    const allowedFields = [
+      'id', 'user_id', 'tenant_id', 'amount', 'gateway', 
+      'authority', 'ref_id', 'status', 'payload', 'receipt_Image'
+    ];
+    const finalPayload: any = {};
+    for (const field of allowedFields) {
+      if (cleanPayload[field] !== undefined) {
+        finalPayload[field] = cleanPayload[field];
+      }
+    }
+
     const res = await fetch(url, {
       method,
       headers: { 
         'Content-Type': 'application/json',
         ...getAuthHeaders()
       },
-      body: JSON.stringify(cleanPayload)
+      body: JSON.stringify(finalPayload)
     });
-    if (!res.ok) throw new Error('خطا در ذخیره‌سازی تراکنش در پایگاه داده');
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error('Failed to save transaction in Directus:', errText);
+      throw new Error('خطا در ذخیره‌سازی تراکنش در پایگاه داده');
+    }
+  },
+  getSiteSettings: async (): Promise<{ bank_card?: string; bank_name?: string } | null> => {
+    try {
+      const res = await fetch(`${DIRECTUS_BASE_URL}/items/site_settings`, {
+        headers: { ...getAuthHeaders() }
+      });
+      if (!res.ok) throw new Error('Failed to fetch site settings');
+      const json = await res.json();
+      const data = json?.data;
+      if (Array.isArray(data)) {
+        return data[0] || null;
+      }
+      return data || null;
+    } catch {
+      console.warn('Directus site settings fetch failed, using defaults');
+      return { bank_card: '۵۰۲۲-۲۹۱۰-۱۲۳۴-۵۶۷۸', bank_name: 'کاردینو دیجیتال سیستم' };
+    }
+  },
+  saveSiteSettings: async (settings: { bank_card?: string; bank_name?: string }): Promise<void> => {
+    try {
+      // Find existing ID of site_settings record if any
+      let existingId = 1;
+      try {
+        const getRes = await fetch(`${DIRECTUS_BASE_URL}/items/site_settings`, {
+          headers: { ...getAuthHeaders() }
+        });
+        if (getRes.ok) {
+          const json = await getRes.json();
+          const data = json?.data;
+          if (Array.isArray(data) && data[0]?.id) {
+            existingId = data[0].id;
+          } else if (data?.id) {
+            existingId = data.id;
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to pre-fetch site settings id', e);
+      }
+
+      // Try PATCHing with the identified or default ID
+      const res = await fetch(`${DIRECTUS_BASE_URL}/items/site_settings/${existingId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
+        body: JSON.stringify(settings)
+      });
+      if (!res.ok) {
+        // Try POSTing to create it
+        const resPost = await fetch(`${DIRECTUS_BASE_URL}/items/site_settings`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeaders()
+          },
+          body: JSON.stringify({ id: existingId, ...settings })
+        });
+        if (!resPost.ok) {
+          // Final fallback to PATCHing the general collection
+          const resPatchAll = await fetch(`${DIRECTUS_BASE_URL}/items/site_settings`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              ...getAuthHeaders()
+            },
+            body: JSON.stringify(settings)
+          });
+          if (!resPatchAll.ok) throw new Error('Failed to save site settings');
+        }
+      }
+    } catch (err: any) {
+      throw new Error('خطا در ذخیره تنظیمات حساب بانکی: ' + err.message);
+    }
   },
 
   // ---- ANALYTICS ----

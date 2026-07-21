@@ -43,14 +43,14 @@ export function CustomerBillingView({
         <div className="space-y-1 text-right">
           <p className="font-bold text-slate-200 flex items-center gap-1.5 justify-start">
             <span className="h-2 w-2 rounded-full bg-blue-500"></span>
-            امکان پرداخت آفلاین (کارت به کارت) و فعال‌سازی دستی اشتراک
+            پرداخت آفلاین (کارت به کارت) و فعال‌سازی دستی اشتراک
           </p>
           <p className="text-slate-400 text-[11px] leading-relaxed">
-            شما می‌توانید مبلغ پلن دلخواه خود را مستقیماً به شماره کارت مدیریت واریز کرده و با کلیک روی دکمه <span className="text-slate-200 font-semibold">«پرداخت آفلاین (کارت به کارت)»</span>، مشخصات فیش واریزی خود را ثبت نمایید تا پس از تایید مدیریت فعال گردد.
+            شما می‌توانید مبلغ پلن دلخواه خود را مستقیماً به شماره کارت مدیریت واریز کرده و با کلیک روی دکمه <span className="text-slate-200 font-semibold">«ثبت فیش واریزی (کارت به کارت)»</span>، مشخصات فیش و تصویر رسید خود را ثبت نمایید تا پس از تایید مدیریت فعال گردد.
           </p>
         </div>
         <div className="px-3 py-1.5 bg-blue-500/10 text-blue-400 font-bold rounded-lg shrink-0 text-[10px] self-start md:self-auto">
-          پشتیبانی شتاب + آفلاین
+          پرداخت کارت به کارت (آفلاین)
         </div>
       </div>
 
@@ -95,21 +95,12 @@ export function CustomerBillingView({
               <div className="space-y-2 pt-2 border-t border-slate-900">
                 <button
                   onClick={() => {
-                    setSimulatedGateway('زرین‌پال');
-                    handleInitiatePayment(plan);
-                  }}
-                  className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-xs transition shadow shadow-blue-600/10 flex items-center justify-center gap-1"
-                >
-                  پرداخت آنلاین (تایید آنی)
-                </button>
-                <button
-                  onClick={() => {
                     setSimulatedGateway('کارت به کارت (پرداخت آفلاین)');
                     handleInitiatePayment(plan);
                   }}
-                  className="w-full py-2 bg-slate-900 hover:bg-slate-850 text-slate-200 hover:text-white rounded-xl font-bold text-xs border border-slate-800 hover:border-slate-700 transition flex items-center justify-center gap-1"
+                  className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-xs transition shadow shadow-blue-600/10 flex items-center justify-center gap-1 cursor-pointer"
                 >
-                  پرداخت آفلاین (کارت به کارت)
+                  ثبت فیش واریزی (کارت به کارت)
                 </button>
               </div>
             )}
