@@ -78,6 +78,15 @@ export function CustomerCardsView({
   onNavigateToBilling
 }: CustomerCardsViewProps) {
   const [editorTab, setEditorTab] = React.useState<'info' | 'contact' | 'maps' | 'bank' | 'advanced'>('info');
+  const [previewCopiedField, setPreviewCopiedField] = React.useState<string | null>(null);
+
+  const handlePreviewCopyText = (text: string, fieldName: string) => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+    }
+    setPreviewCopiedField(fieldName);
+    setTimeout(() => setPreviewCopiedField(null), 2000);
+  };
 
   return (
     <div className="space-y-6">
@@ -1229,20 +1238,32 @@ export function CustomerCardsView({
                                 </h5>
                                 <div className="space-y-1">
                                   {editingCard.bank_card && (
-                                    <div className="p-1.5 bg-white/80 border border-slate-200/40 rounded-lg flex items-center justify-between text-[7px]">
-                                      <span className="opacity-60">کارت:</span>
+                                    <div 
+                                      onClick={() => handlePreviewCopyText(editingCard.bank_card || '', 'bank_card')}
+                                      className="p-1.5 bg-white/80 hover:bg-white border border-slate-200/40 rounded-lg flex items-center justify-between text-[7px] cursor-pointer transition active:scale-[0.98]"
+                                      title="کپی"
+                                    >
+                                      <span className="opacity-60 font-bold text-emerald-600">{previewCopiedField === 'bank_card' ? 'کپی شد!' : 'کارت:'}</span>
                                       <span className="font-mono font-bold text-slate-700">{editingCard.bank_card}</span>
                                     </div>
                                   )}
                                   {editingCard.bank_account && (
-                                    <div className="p-1.5 bg-white/80 border border-slate-200/40 rounded-lg flex items-center justify-between text-[7px]">
-                                      <span className="opacity-60">حساب:</span>
+                                    <div 
+                                      onClick={() => handlePreviewCopyText(editingCard.bank_account || '', 'bank_account')}
+                                      className="p-1.5 bg-white/80 hover:bg-white border border-slate-200/40 rounded-lg flex items-center justify-between text-[7px] cursor-pointer transition active:scale-[0.98]"
+                                      title="کپی"
+                                    >
+                                      <span className="opacity-60 font-bold text-emerald-600">{previewCopiedField === 'bank_account' ? 'کپی شد!' : 'حساب:'}</span>
                                       <span className="font-mono font-bold text-slate-700">{editingCard.bank_account}</span>
                                     </div>
                                   )}
                                   {editingCard.bank_shaba && (
-                                    <div className="p-1.5 bg-white/80 border border-slate-200/40 rounded-lg flex items-center justify-between text-[7px]">
-                                      <span className="opacity-60">شبا:</span>
+                                    <div 
+                                      onClick={() => handlePreviewCopyText(editingCard.bank_shaba || '', 'bank_shaba')}
+                                      className="p-1.5 bg-white/80 hover:bg-white border border-slate-200/40 rounded-lg flex items-center justify-between text-[7px] cursor-pointer transition active:scale-[0.98]"
+                                      title="کپی"
+                                    >
+                                      <span className="opacity-60 font-bold text-emerald-600">{previewCopiedField === 'bank_shaba' ? 'کپی شد!' : 'شبا:'}</span>
                                       <span className="font-mono font-bold text-slate-700" dir="ltr">{editingCard.bank_shaba}</span>
                                     </div>
                                   )}
@@ -1444,20 +1465,32 @@ export function CustomerCardsView({
                                 </h5>
                                 <div className="space-y-1">
                                   {editingCard.bank_card && (
-                                    <div className="p-1.5 bg-white/5 border border-white/5 rounded-lg flex items-center justify-between text-[7px]">
-                                      <span className="text-slate-400">کارت:</span>
+                                    <div 
+                                      onClick={() => handlePreviewCopyText(editingCard.bank_card || '', 'bank_card')}
+                                      className="p-1.5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-lg flex items-center justify-between text-[7px] cursor-pointer transition active:scale-[0.98]"
+                                      title="کپی"
+                                    >
+                                      <span className="text-emerald-400 font-bold">{previewCopiedField === 'bank_card' ? 'کپی شد!' : 'کارت:'}</span>
                                       <span className="font-mono font-bold text-cyan-400">{editingCard.bank_card}</span>
                                     </div>
                                   )}
                                   {editingCard.bank_account && (
-                                    <div className="p-1.5 bg-white/5 border border-white/5 rounded-lg flex items-center justify-between text-[7px]">
-                                      <span className="text-slate-400">حساب:</span>
+                                    <div 
+                                      onClick={() => handlePreviewCopyText(editingCard.bank_account || '', 'bank_account')}
+                                      className="p-1.5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-lg flex items-center justify-between text-[7px] cursor-pointer transition active:scale-[0.98]"
+                                      title="کپی"
+                                    >
+                                      <span className="text-emerald-400 font-bold">{previewCopiedField === 'bank_account' ? 'کپی شد!' : 'حساب:'}</span>
                                       <span className="font-mono font-bold text-cyan-400">{editingCard.bank_account}</span>
                                     </div>
                                   )}
                                   {editingCard.bank_shaba && (
-                                    <div className="p-1.5 bg-white/5 border border-white/5 rounded-lg flex items-center justify-between text-[7px]">
-                                      <span className="text-slate-400">شبا:</span>
+                                    <div 
+                                      onClick={() => handlePreviewCopyText(editingCard.bank_shaba || '', 'bank_shaba')}
+                                      className="p-1.5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-lg flex items-center justify-between text-[7px] cursor-pointer transition active:scale-[0.98]"
+                                      title="کپی"
+                                    >
+                                      <span className="text-emerald-400 font-bold">{previewCopiedField === 'bank_shaba' ? 'کپی شد!' : 'شبا:'}</span>
                                       <span className="font-mono font-bold text-cyan-400" dir="ltr">{editingCard.bank_shaba}</span>
                                     </div>
                                   )}
@@ -1656,20 +1689,32 @@ export function CustomerCardsView({
                                 </h5>
                                 <div className="space-y-1">
                                   {editingCard.bank_card && (
-                                    <div className="p-1.5 bg-stone-100 border border-stone-200 rounded-lg flex items-center justify-between text-[7px] text-stone-700">
-                                      <span className="opacity-70">کارت:</span>
+                                    <div 
+                                      onClick={() => handlePreviewCopyText(editingCard.bank_card || '', 'bank_card')}
+                                      className="p-1.5 bg-stone-100 hover:bg-stone-200 border border-stone-200 rounded-lg flex items-center justify-between text-[7px] text-stone-700 cursor-pointer transition active:scale-[0.98]"
+                                      title="کپی"
+                                    >
+                                      <span className="text-emerald-600 font-bold">{previewCopiedField === 'bank_card' ? 'کپی شد!' : 'کارت:'}</span>
                                       <span className="font-mono font-bold">{editingCard.bank_card}</span>
                                     </div>
                                   )}
                                   {editingCard.bank_account && (
-                                    <div className="p-1.5 bg-stone-100 border border-stone-200 rounded-lg flex items-center justify-between text-[7px] text-stone-700">
-                                      <span className="opacity-70">حساب:</span>
+                                    <div 
+                                      onClick={() => handlePreviewCopyText(editingCard.bank_account || '', 'bank_account')}
+                                      className="p-1.5 bg-stone-100 hover:bg-stone-200 border border-stone-200 rounded-lg flex items-center justify-between text-[7px] text-stone-700 cursor-pointer transition active:scale-[0.98]"
+                                      title="کپی"
+                                    >
+                                      <span className="text-emerald-600 font-bold">{previewCopiedField === 'bank_account' ? 'کپی شد!' : 'حساب:'}</span>
                                       <span className="font-mono font-bold">{editingCard.bank_account}</span>
                                     </div>
                                   )}
                                   {editingCard.bank_shaba && (
-                                    <div className="p-1.5 bg-stone-100 border border-stone-200 rounded-lg flex items-center justify-between text-[7px] text-stone-700">
-                                      <span className="opacity-70">شبا:</span>
+                                    <div 
+                                      onClick={() => handlePreviewCopyText(editingCard.bank_shaba || '', 'bank_shaba')}
+                                      className="p-1.5 bg-stone-100 hover:bg-stone-200 border border-stone-200 rounded-lg flex items-center justify-between text-[7px] text-stone-700 cursor-pointer transition active:scale-[0.98]"
+                                      title="کپی"
+                                    >
+                                      <span className="text-emerald-600 font-bold">{previewCopiedField === 'bank_shaba' ? 'کپی شد!' : 'شبا:'}</span>
                                       <span className="font-mono font-bold" dir="ltr">{editingCard.bank_shaba}</span>
                                     </div>
                                   )}
@@ -1854,20 +1899,32 @@ export function CustomerCardsView({
                                 </h5>
                                 <div className="space-y-1">
                                   {editingCard.bank_card && (
-                                    <div className="p-1.5 bg-stone-950/60 border border-amber-500/10 rounded-lg flex items-center justify-between text-[7px] text-stone-200">
-                                      <span className="opacity-50">کارت:</span>
+                                    <div 
+                                      onClick={() => handlePreviewCopyText(editingCard.bank_card || '', 'bank_card')}
+                                      className="p-1.5 bg-stone-950/60 hover:bg-stone-900 border border-amber-500/10 rounded-lg flex items-center justify-between text-[7px] text-stone-200 cursor-pointer transition active:scale-[0.98]"
+                                      title="کپی"
+                                    >
+                                      <span className="text-emerald-400 font-bold">{previewCopiedField === 'bank_card' ? 'کپی شد!' : 'کارت:'}</span>
                                       <span className="font-mono font-bold text-amber-500">{editingCard.bank_card}</span>
                                     </div>
                                   )}
                                   {editingCard.bank_account && (
-                                    <div className="p-1.5 bg-stone-950/60 border border-amber-500/10 rounded-lg flex items-center justify-between text-[7px] text-stone-200">
-                                      <span className="opacity-50">حساب:</span>
+                                    <div 
+                                      onClick={() => handlePreviewCopyText(editingCard.bank_account || '', 'bank_account')}
+                                      className="p-1.5 bg-stone-950/60 hover:bg-stone-900 border border-amber-500/10 rounded-lg flex items-center justify-between text-[7px] text-stone-200 cursor-pointer transition active:scale-[0.98]"
+                                      title="کپی"
+                                    >
+                                      <span className="text-emerald-400 font-bold">{previewCopiedField === 'bank_account' ? 'کپی شد!' : 'حساب:'}</span>
                                       <span className="font-mono font-bold text-amber-500">{editingCard.bank_account}</span>
                                     </div>
                                   )}
                                   {editingCard.bank_shaba && (
-                                    <div className="p-1.5 bg-stone-950/60 border border-amber-500/10 rounded-lg flex items-center justify-between text-[7px] text-stone-200">
-                                      <span className="opacity-50">شبا:</span>
+                                    <div 
+                                      onClick={() => handlePreviewCopyText(editingCard.bank_shaba || '', 'bank_shaba')}
+                                      className="p-1.5 bg-stone-950/60 hover:bg-stone-900 border border-amber-500/10 rounded-lg flex items-center justify-between text-[7px] text-stone-200 cursor-pointer transition active:scale-[0.98]"
+                                      title="کپی"
+                                    >
+                                      <span className="text-emerald-400 font-bold">{previewCopiedField === 'bank_shaba' ? 'کپی شد!' : 'شبا:'}</span>
                                       <span className="font-mono font-bold text-amber-500" dir="ltr">{editingCard.bank_shaba}</span>
                                     </div>
                                   )}

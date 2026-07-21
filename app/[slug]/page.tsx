@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { dbService, Card, Template, getImageUrl } from '../../lib/directus';
+import { dbService, Card, Template, getImageUrl, parseCardFields } from '../../lib/directus';
 import { 
   Phone, Mail, Globe, MapPin, Share2, Download, 
   Linkedin, Instagram, Send, MessageCircle, Link as LinkIcon, 
@@ -69,8 +69,9 @@ export default function PublicCardPage() {
         }
 
         if (apiCard) {
-          setCard(apiCard);
-          dbService.logVisit(apiCard.id, deviceName, referrerName, randomCountry);
+          const parsedCard = parseCardFields(apiCard);
+          setCard(parsedCard);
+          dbService.logVisit(parsedCard.id, deviceName, referrerName, randomCountry);
           
           // Fetch templates dynamically
           try {
@@ -453,45 +454,48 @@ export default function PublicCardPage() {
                   </h3>
                   <div className="space-y-2.5">
                     {card.bank_card && (
-                      <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs">
+                      <div 
+                        onClick={() => handleCopyText(card.bank_card || '', 'bank_card')}
+                        className="p-3 bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-xl flex items-center justify-between text-xs cursor-pointer transition active:scale-[0.98]"
+                        title="کلیک برای کپی آسان"
+                      >
                         <div>
                           <span className="text-[10px] text-slate-400 block mb-1 font-semibold">شماره کارت</span>
                           <span className="font-mono font-bold tracking-widest text-slate-700">{card.bank_card}</span>
                         </div>
-                        <button 
-                          onClick={() => handleCopyText(card.bank_card || '', 'bank_card')}
-                          className="p-1.5 hover:bg-slate-200/60 rounded-lg text-slate-500 hover:text-slate-700 transition flex items-center gap-1"
-                        >
+                        <div className="p-1.5 hover:bg-slate-200/60 rounded-lg text-slate-500 hover:text-slate-700 transition flex items-center gap-1">
                           {copiedField === 'bank_card' ? <span className="text-[10px] font-bold text-emerald-600">کپی شد!</span> : <Copy className="h-4 w-4" />}
-                        </button>
+                        </div>
                       </div>
                     )}
                     {card.bank_account && (
-                      <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs">
+                      <div 
+                        onClick={() => handleCopyText(card.bank_account || '', 'bank_account')}
+                        className="p-3 bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-xl flex items-center justify-between text-xs cursor-pointer transition active:scale-[0.98]"
+                        title="کلیک برای کپی آسان"
+                      >
                         <div>
                           <span className="text-[10px] text-slate-400 block mb-1 font-semibold">شماره حساب</span>
                           <span className="font-mono font-bold text-slate-700">{card.bank_account}</span>
                         </div>
-                        <button 
-                          onClick={() => handleCopyText(card.bank_account || '', 'bank_account')}
-                          className="p-1.5 hover:bg-slate-200/60 rounded-lg text-slate-500 hover:text-slate-700 transition flex items-center gap-1"
-                        >
+                        <div className="p-1.5 hover:bg-slate-200/60 rounded-lg text-slate-500 hover:text-slate-700 transition flex items-center gap-1">
                           {copiedField === 'bank_account' ? <span className="text-[10px] font-bold text-emerald-600">کپی شد!</span> : <Copy className="h-4 w-4" />}
-                        </button>
+                        </div>
                       </div>
                     )}
                     {card.bank_shaba && (
-                      <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs">
+                      <div 
+                        onClick={() => handleCopyText(card.bank_shaba || '', 'bank_shaba')}
+                        className="p-3 bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-xl flex items-center justify-between text-xs cursor-pointer transition active:scale-[0.98]"
+                        title="کلیک برای کپی آسان"
+                      >
                         <div>
                           <span className="text-[10px] text-slate-400 block mb-1 font-semibold">شماره شبا (IR)</span>
                           <span className="font-mono font-bold text-slate-700 text-left" dir="ltr">{card.bank_shaba}</span>
                         </div>
-                        <button 
-                          onClick={() => handleCopyText(card.bank_shaba || '', 'bank_shaba')}
-                          className="p-1.5 hover:bg-slate-200/60 rounded-lg text-slate-500 hover:text-slate-700 transition flex items-center gap-1"
-                        >
+                        <div className="p-1.5 hover:bg-slate-200/60 rounded-lg text-slate-500 hover:text-slate-700 transition flex items-center gap-1">
                           {copiedField === 'bank_shaba' ? <span className="text-[10px] font-bold text-emerald-600">کپی شد!</span> : <Copy className="h-4 w-4" />}
-                        </button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -734,45 +738,48 @@ export default function PublicCardPage() {
                 </h3>
                 <div className="space-y-2.5">
                   {card.bank_card && (
-                    <div className="p-3 bg-white/5 rounded-xl border border-white/5 flex items-center justify-between text-xs">
+                    <div 
+                      onClick={() => handleCopyText(card.bank_card || '', 'bank_card')}
+                      className="p-3 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 flex items-center justify-between text-xs cursor-pointer transition active:scale-[0.98]"
+                      title="کلیک برای کپی آسان"
+                    >
                       <div>
                         <span className="text-[10px] text-slate-500 block mb-1 font-semibold">شماره کارت</span>
                         <span className="font-mono font-bold tracking-widest text-white">{card.bank_card}</span>
                       </div>
-                      <button 
-                        onClick={() => handleCopyText(card.bank_card || '', 'bank_card')}
-                        className="p-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-slate-300 hover:text-white transition flex items-center gap-1"
-                      >
+                      <div className="p-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-slate-300 hover:text-white transition flex items-center gap-1">
                         {copiedField === 'bank_card' ? <span className="text-[10px] font-bold text-emerald-400">کپی شد!</span> : <Copy className="h-4 w-4" />}
-                      </button>
+                      </div>
                     </div>
                   )}
                   {card.bank_account && (
-                    <div className="p-3 bg-white/5 rounded-xl border border-white/5 flex items-center justify-between text-xs">
+                    <div 
+                      onClick={() => handleCopyText(card.bank_account || '', 'bank_account')}
+                      className="p-3 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 flex items-center justify-between text-xs cursor-pointer transition active:scale-[0.98]"
+                      title="کلیک برای کپی آسان"
+                    >
                       <div>
                         <span className="text-[10px] text-slate-500 block mb-1 font-semibold">شماره حساب</span>
                         <span className="font-mono font-bold text-white">{card.bank_account}</span>
                       </div>
-                      <button 
-                        onClick={() => handleCopyText(card.bank_account || '', 'bank_account')}
-                        className="p-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-slate-300 hover:text-white transition flex items-center gap-1"
-                      >
+                      <div className="p-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-slate-300 hover:text-white transition flex items-center gap-1">
                         {copiedField === 'bank_account' ? <span className="text-[10px] font-bold text-emerald-400">کپی شد!</span> : <Copy className="h-4 w-4" />}
-                      </button>
+                      </div>
                     </div>
                   )}
                   {card.bank_shaba && (
-                    <div className="p-3 bg-white/5 rounded-xl border border-white/5 flex items-center justify-between text-xs">
+                    <div 
+                      onClick={() => handleCopyText(card.bank_shaba || '', 'bank_shaba')}
+                      className="p-3 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 flex items-center justify-between text-xs cursor-pointer transition active:scale-[0.98]"
+                      title="کلیک برای کپی آسان"
+                    >
                       <div>
                         <span className="text-[10px] text-slate-500 block mb-1 font-semibold">شماره شبا (IR)</span>
                         <span className="font-mono font-bold text-white text-left" dir="ltr">{card.bank_shaba}</span>
                       </div>
-                      <button 
-                        onClick={() => handleCopyText(card.bank_shaba || '', 'bank_shaba')}
-                        className="p-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-slate-300 hover:text-white transition flex items-center gap-1"
-                      >
+                      <div className="p-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-slate-300 hover:text-white transition flex items-center gap-1">
                         {copiedField === 'bank_shaba' ? <span className="text-[10px] font-bold text-emerald-400">کپی شد!</span> : <Copy className="h-4 w-4" />}
-                      </button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -975,45 +982,48 @@ export default function PublicCardPage() {
                 </h3>
                 <div className="space-y-2">
                   {card.bank_card && (
-                    <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs">
+                    <div 
+                      onClick={() => handleCopyText(card.bank_card || '', 'bank_card')}
+                      className="p-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-100 flex items-center justify-between text-xs cursor-pointer transition active:scale-[0.98]"
+                      title="کلیک برای کپی آسان"
+                    >
                       <div>
                         <span className="text-[9px] text-slate-400 block mb-0.5 font-semibold">شماره کارت</span>
                         <span className="font-mono font-bold tracking-widest text-slate-700">{card.bank_card}</span>
                       </div>
-                      <button 
-                        onClick={() => handleCopyText(card.bank_card || '', 'bank_card')}
-                        className="p-1 hover:bg-slate-200 rounded text-slate-500 hover:text-slate-750 transition flex items-center gap-1"
-                      >
+                      <div className="p-1 hover:bg-slate-200 rounded text-slate-500 hover:text-slate-750 transition flex items-center gap-1">
                         {copiedField === 'bank_card' ? <span className="text-[9px] font-bold text-emerald-600">کپی شد!</span> : <Copy className="h-3.5 w-3.5" />}
-                      </button>
+                      </div>
                     </div>
                   )}
                   {card.bank_account && (
-                    <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs">
+                    <div 
+                      onClick={() => handleCopyText(card.bank_account || '', 'bank_account')}
+                      className="p-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-100 flex items-center justify-between text-xs cursor-pointer transition active:scale-[0.98]"
+                      title="کلیک برای کپی آسان"
+                    >
                       <div>
                         <span className="text-[9px] text-slate-400 block mb-0.5 font-semibold">شماره حساب</span>
                         <span className="font-mono font-bold text-slate-700">{card.bank_account}</span>
                       </div>
-                      <button 
-                        onClick={() => handleCopyText(card.bank_account || '', 'bank_account')}
-                        className="p-1 hover:bg-slate-200 rounded text-slate-500 hover:text-slate-750 transition flex items-center gap-1"
-                      >
+                      <div className="p-1 hover:bg-slate-200 rounded text-slate-500 hover:text-slate-750 transition flex items-center gap-1">
                         {copiedField === 'bank_account' ? <span className="text-[9px] font-bold text-emerald-600">کپی شد!</span> : <Copy className="h-3.5 w-3.5" />}
-                      </button>
+                      </div>
                     </div>
                   )}
                   {card.bank_shaba && (
-                    <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs">
+                    <div 
+                      onClick={() => handleCopyText(card.bank_shaba || '', 'bank_shaba')}
+                      className="p-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-100 flex items-center justify-between text-xs cursor-pointer transition active:scale-[0.98]"
+                      title="کلیک برای کپی آسان"
+                    >
                       <div>
                         <span className="text-[9px] text-slate-400 block mb-0.5 font-semibold">شماره شبا (IR)</span>
                         <span className="font-mono font-bold text-slate-700 text-left" dir="ltr">{card.bank_shaba}</span>
                       </div>
-                      <button 
-                        onClick={() => handleCopyText(card.bank_shaba || '', 'bank_shaba')}
-                        className="p-1 hover:bg-slate-200 rounded text-slate-500 hover:text-slate-750 transition flex items-center gap-1"
-                      >
+                      <div className="p-1 hover:bg-slate-200 rounded text-slate-500 hover:text-slate-750 transition flex items-center gap-1">
                         {copiedField === 'bank_shaba' ? <span className="text-[9px] font-bold text-emerald-600">کپی شد!</span> : <Copy className="h-3.5 w-3.5" />}
-                      </button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1246,45 +1256,48 @@ export default function PublicCardPage() {
                 </h3>
                 <div className="space-y-2.5">
                   {card.bank_card && (
-                    <div className="p-3 bg-stone-900/60 rounded-xl border border-amber-500/10 flex items-center justify-between text-xs">
+                    <div 
+                      onClick={() => handleCopyText(card.bank_card || '', 'bank_card')}
+                      className="p-3 bg-stone-900/60 hover:bg-stone-900/95 rounded-xl border border-amber-500/10 flex items-center justify-between text-xs cursor-pointer transition active:scale-[0.98]"
+                      title="کلیک برای کپی آسان"
+                    >
                       <div>
                         <span className="text-[9px] text-stone-500 block mb-0.5 font-bold uppercase tracking-wider">شماره کارت</span>
                         <span className="font-mono font-bold tracking-widest text-[#e2b53e]">{card.bank_card}</span>
                       </div>
-                      <button 
-                        onClick={() => handleCopyText(card.bank_card || '', 'bank_card')}
-                        className="p-1.5 bg-amber-500/10 hover:bg-amber-500/25 rounded-lg text-[#e2b53e] transition flex items-center gap-1"
-                      >
+                      <div className="p-1.5 bg-amber-500/10 hover:bg-amber-500/25 rounded-lg text-[#e2b53e] transition flex items-center gap-1">
                         {copiedField === 'bank_card' ? <span className="text-[9px] font-bold text-emerald-400">کپی شد!</span> : <Copy className="h-4 w-4" />}
-                      </button>
+                      </div>
                     </div>
                   )}
                   {card.bank_account && (
-                    <div className="p-3 bg-stone-900/60 rounded-xl border border-amber-500/10 flex items-center justify-between text-xs">
+                    <div 
+                      onClick={() => handleCopyText(card.bank_account || '', 'bank_account')}
+                      className="p-3 bg-stone-900/60 hover:bg-stone-900/95 rounded-xl border border-amber-500/10 flex items-center justify-between text-xs cursor-pointer transition active:scale-[0.98]"
+                      title="کلیک برای کپی آسان"
+                    >
                       <div>
                         <span className="text-[9px] text-stone-500 block mb-0.5 font-bold uppercase tracking-wider">شماره حساب</span>
                         <span className="font-mono font-bold text-[#e2b53e]">{card.bank_account}</span>
                       </div>
-                      <button 
-                        onClick={() => handleCopyText(card.bank_account || '', 'bank_account')}
-                        className="p-1.5 bg-amber-500/10 hover:bg-amber-500/25 rounded-lg text-[#e2b53e] transition flex items-center gap-1"
-                      >
+                      <div className="p-1.5 bg-amber-500/10 hover:bg-amber-500/25 rounded-lg text-[#e2b53e] transition flex items-center gap-1">
                         {copiedField === 'bank_account' ? <span className="text-[9px] font-bold text-emerald-400">کپی شد!</span> : <Copy className="h-4 w-4" />}
-                      </button>
+                      </div>
                     </div>
                   )}
                   {card.bank_shaba && (
-                    <div className="p-3 bg-stone-900/60 rounded-xl border border-amber-500/10 flex items-center justify-between text-xs">
+                    <div 
+                      onClick={() => handleCopyText(card.bank_shaba || '', 'bank_shaba')}
+                      className="p-3 bg-stone-900/60 hover:bg-stone-900/95 rounded-xl border border-amber-500/10 flex items-center justify-between text-xs cursor-pointer transition active:scale-[0.98]"
+                      title="کلیک برای کپی آسان"
+                    >
                       <div>
                         <span className="text-[9px] text-stone-500 block mb-0.5 font-bold uppercase tracking-wider">شماره شبا (IR)</span>
                         <span className="font-mono font-bold text-[#e2b53e] text-left" dir="ltr">{card.bank_shaba}</span>
                       </div>
-                      <button 
-                        onClick={() => handleCopyText(card.bank_shaba || '', 'bank_shaba')}
-                        className="p-1.5 bg-amber-500/10 hover:bg-amber-500/25 rounded-lg text-[#e2b53e] transition flex items-center gap-1"
-                      >
+                      <div className="p-1.5 bg-amber-500/10 hover:bg-amber-500/25 rounded-lg text-[#e2b53e] transition flex items-center gap-1">
                         {copiedField === 'bank_shaba' ? <span className="text-[9px] font-bold text-emerald-400">کپی شد!</span> : <Copy className="h-4 w-4" />}
-                      </button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1471,7 +1484,7 @@ export default function PublicCardPage() {
                       href={btn.url}
                       target="_blank"
                       rel="noreferrer"
-                      className="w-full py-3 px-4 rounded-xl border flex items-center justify-between font-semibold transition text-xs"
+                      className="w-full py-3 px-4 rounded-xl border flex items-center justify-between font-semibold transition text-xs hover:scale-[1.01]"
                       style={{ 
                         borderColor: sColor, 
                         backgroundColor: isDarkTheme ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)',
@@ -1484,6 +1497,133 @@ export default function PublicCardPage() {
                       <ChevronLeft className="h-4 w-4" style={{ color: pColor }} />
                     </a>
                   ))}
+                </div>
+              )}
+
+              {/* Maps Section */}
+              {(card.neshan || card.balad || card.waze || card.googlemap) && (
+                <div className="space-y-2 pt-4 border-t" style={{ borderColor: sColor }}>
+                  <span className="text-[10px] font-bold block text-center" style={{ color: txtSecColor }}>مسیریاب و موقعیت مکانی</span>
+                  <div className="grid grid-cols-2 gap-2">
+                    {card.neshan && (
+                      <a href={card.neshan} target="_blank" rel="noreferrer" className="flex items-center gap-2 p-2 rounded-xl transition border hover:scale-105" style={{ borderColor: sColor, backgroundColor: isDarkTheme ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)' }}>
+                        <MapPin className="h-4 w-4 text-emerald-500 shrink-0" />
+                        <span className="text-[10px] font-bold" style={{ color: txtColor }}>مسیریاب نشان</span>
+                      </a>
+                    )}
+                    {card.balad && (
+                      <a href={card.balad} target="_blank" rel="noreferrer" className="flex items-center gap-2 p-2 rounded-xl transition border hover:scale-105" style={{ borderColor: sColor, backgroundColor: isDarkTheme ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)' }}>
+                        <MapPin className="h-4 w-4 text-blue-500 shrink-0" />
+                        <span className="text-[10px] font-bold" style={{ color: txtColor }}>مسیریاب بلد</span>
+                      </a>
+                    )}
+                    {card.waze && (
+                      <a href={card.waze} target="_blank" rel="noreferrer" className="flex items-center gap-2 p-2 rounded-xl transition border hover:scale-105" style={{ borderColor: sColor, backgroundColor: isDarkTheme ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)' }}>
+                        <MapPin className="h-4 w-4 text-amber-500 shrink-0" />
+                        <span className="text-[10px] font-bold" style={{ color: txtColor }}>مسیریاب ویز</span>
+                      </a>
+                    )}
+                    {card.googlemap && (
+                      <a href={card.googlemap} target="_blank" rel="noreferrer" className="flex items-center gap-2 p-2 rounded-xl transition border hover:scale-105" style={{ borderColor: sColor, backgroundColor: isDarkTheme ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)' }}>
+                        <MapPin className="h-4 w-4 text-red-500 shrink-0" />
+                        <span className="text-[10px] font-bold" style={{ color: txtColor }}>گوگل مپ</span>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Extra Phones Section */}
+              {(mobile || (extra_phones && extra_phones.length > 0)) && (
+                <div className="space-y-2 pt-4 border-t" style={{ borderColor: sColor }}>
+                  <span className="text-[10px] font-bold block text-center" style={{ color: txtSecColor }}>تلفن‌های تماس اضافی</span>
+                  <div className="space-y-2">
+                    {mobile && (
+                      <a href={`tel:${mobile}`} className="flex items-center justify-between p-3 rounded-xl border transition text-xs hover:scale-[1.01]" style={{ borderColor: sColor, backgroundColor: isDarkTheme ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)' }}>
+                        <span className="flex items-center gap-2 font-semibold">
+                          <Phone className="h-4 w-4" style={{ color: pColor }} />
+                          <span style={{ color: txtColor }}>تلفن همراه (موبایل):</span>
+                        </span>
+                        <span className="font-mono font-bold" style={{ color: pColor }}>{mobile}</span>
+                      </a>
+                    )}
+                    {extra_phones && extra_phones.map((ph: string, idx: number) => (
+                      <a key={idx} href={`tel:${ph}`} className="flex items-center justify-between p-3 rounded-xl border transition text-xs hover:scale-[1.01]" style={{ borderColor: sColor, backgroundColor: isDarkTheme ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)' }}>
+                        <span className="flex items-center gap-2 font-semibold">
+                          <Phone className="h-4 w-4" style={{ color: pColor }} />
+                          <span style={{ color: txtColor }}>شماره تماس جانبی {idx + 1}:</span>
+                        </span>
+                        <span className="font-mono font-bold" style={{ color: pColor }}>{ph}</span>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Address Section */}
+              {card.address && (
+                <div className="space-y-2 pt-4 border-t" style={{ borderColor: sColor }}>
+                  <span className="text-[10px] font-bold block text-center" style={{ color: txtSecColor }}>نشانی و آدرس حضوری</span>
+                  <div className="p-3.5 rounded-xl border text-xs leading-relaxed font-medium text-center" style={{ borderColor: sColor, backgroundColor: isDarkTheme ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)', color: txtColor }}>
+                    {card.address}
+                  </div>
+                </div>
+              )}
+
+              {/* Financial Section */}
+              {(card.bank_card || card.bank_account || card.bank_shaba) && (
+                <div className="space-y-2.5 pt-4 border-t" style={{ borderColor: sColor }}>
+                  <span className="text-[10px] font-bold block text-center" style={{ color: txtSecColor }}>اطلاعات حساب و کارت بانکی</span>
+                  <div className="space-y-2">
+                    {card.bank_card && (
+                      <div 
+                        onClick={() => handleCopyText(card.bank_card || '', 'bank_card')}
+                        className="p-3 rounded-xl border flex items-center justify-between text-xs cursor-pointer transition active:scale-[0.98] hover:scale-[1.01]" 
+                        style={{ borderColor: sColor, backgroundColor: isDarkTheme ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)' }}
+                        title="کلیک برای کپی آسان"
+                      >
+                        <div>
+                          <span className="text-[10px] block mb-1 font-semibold" style={{ color: txtSecColor }}>شماره کارت</span>
+                          <span className="font-mono font-bold tracking-widest" style={{ color: txtColor }}>{card.bank_card}</span>
+                        </div>
+                        <div className="p-1.5 rounded-lg transition flex items-center gap-1" style={{ color: pColor }}>
+                          {copiedField === 'bank_card' ? <span className="text-[10px] font-bold text-emerald-500">کپی شد!</span> : <Copy className="h-4 w-4" />}
+                        </div>
+                      </div>
+                    )}
+                    {card.bank_account && (
+                      <div 
+                        onClick={() => handleCopyText(card.bank_account || '', 'bank_account')}
+                        className="p-3 rounded-xl border flex items-center justify-between text-xs cursor-pointer transition active:scale-[0.98] hover:scale-[1.01]" 
+                        style={{ borderColor: sColor, backgroundColor: isDarkTheme ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)' }}
+                        title="کلیک برای کپی آسان"
+                      >
+                        <div>
+                          <span className="text-[10px] block mb-1 font-semibold" style={{ color: txtSecColor }}>شماره حساب</span>
+                          <span className="font-mono font-bold" style={{ color: txtColor }}>{card.bank_account}</span>
+                        </div>
+                        <div className="p-1.5 rounded-lg transition flex items-center gap-1" style={{ color: pColor }}>
+                          {copiedField === 'bank_account' ? <span className="text-[10px] font-bold text-emerald-500">کپی شد!</span> : <Copy className="h-4 w-4" />}
+                        </div>
+                      </div>
+                    )}
+                    {card.bank_shaba && (
+                      <div 
+                        onClick={() => handleCopyText(card.bank_shaba || '', 'bank_shaba')}
+                        className="p-3 rounded-xl border flex items-center justify-between text-xs cursor-pointer transition active:scale-[0.98] hover:scale-[1.01]" 
+                        style={{ borderColor: sColor, backgroundColor: isDarkTheme ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)' }}
+                        title="کلیک برای کپی آسان"
+                      >
+                        <div>
+                          <span className="text-[10px] block mb-1 font-semibold" style={{ color: txtSecColor }}>شماره شبا (IR)</span>
+                          <span className="font-mono font-bold text-left" dir="ltr" style={{ color: txtColor }}>{card.bank_shaba}</span>
+                        </div>
+                        <div className="p-1.5 rounded-lg transition flex items-center gap-1" style={{ color: pColor }}>
+                          {copiedField === 'bank_shaba' ? <span className="text-[10px] font-bold text-emerald-500">کپی شد!</span> : <Copy className="h-4 w-4" />}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 

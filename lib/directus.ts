@@ -325,8 +325,18 @@ const SEED_CARDS: Card[] = [
     job_title: 'مدیر ارشد فناوری (CTO)',
     company: 'هلدینگ فناوری برند یار',
     bio: 'بیش از ۱۰ سال سابقه در توسعه نرم‌افزار و معماری سیستم‌های توزیع‌شده مایکرو سرویس. علاقه‌مند به هوش مصنوعی و بلاکچین.',
+    neshan: 'https://neshan.org/maps/places/ali-alavi-hq',
+    balad: 'https://balad.ir/location?latitude=35.7&longitude=51.4',
+    waze: 'https://waze.com/ul?ll=35.7,51.4',
+    googlemap: 'https://maps.google.com/?q=35.7,51.4',
+    bank_card: '۶۰۳۷۹۹۱۸۱۲۳۴۵۶۷۸',
+    bank_account: '۰۲۱۵۴۸۷۶۳۲۰۰۱',
+    bank_shaba: 'IR120120000000021548763201',
+    address: 'تهران، خیابان ولیعصر، نرسیده به میدان ونک، برج فناوری شماره ۱، طبقه ۴',
     social_links: {
       phone: '۰۹۱۲۳۴۵۶۷۸۹',
+      mobile: '۰۹۱۲۳۴۵۶۷۸۹',
+      extra_phones: ['۰۹۱۲۹۹۹۸۸۷۷', '۰۲۱۲۲۳۳۴۴۵۵'],
       whatsapp: '۰۹۱۲۳۴۵۶۷۸۹',
       telegram: 'alialavi_dev',
       instagram: 'ali_alavi',
@@ -363,8 +373,18 @@ const SEED_CARDS: Card[] = [
     job_title: 'طراح ارشد تجربه کاربری (UI/UX)',
     company: 'استودیو خلاق تک دیزاین',
     bio: 'طراح و پژوهشگر تعامل انسان و کامپیوتر. خلق تجربه‌های دیجیتالی ساده، کاربردی و در عین حال جسورانه و زیبا شعار من است.',
+    neshan: 'https://neshan.org/maps/places/sara-design-studio',
+    balad: 'https://balad.ir/location?latitude=35.72&longitude=51.42',
+    waze: 'https://waze.com/ul?ll=35.72,51.42',
+    googlemap: 'https://maps.google.com/?q=35.72,51.42',
+    bank_card: '۵۰۲۲۲۹۱۰۱۲۳۴۵۶۷۸',
+    bank_account: '۱۰۰۲۰۰۳۰۰۴۰۰',
+    bank_shaba: 'IR980170000000100200300400',
+    address: 'شیراز، خیابان معالی آباد، مجتمع تجاری آفتاب، واحد ۲۰۴',
     social_links: {
       phone: '۰۹۹۸۷۶۵۴۳۲۱',
+      mobile: '۰۹۹۸۷۶۵۴۳۲۱',
+      extra_phones: ['۰۹۱۷۱۱۱۲۲۳۳'],
       telegram: 'sara_ux',
       instagram: 'sara_designs',
       linkedin: 'sara-rezaei-ux',
@@ -520,6 +540,37 @@ export function cleanDataForDirectus(obj: any): any {
     }
   }
   return cleaned;
+}
+
+export function parseCardFields(card: any): Card {
+  if (!card) return card;
+  const parsed = { ...card };
+  
+  if (typeof parsed.social_links === 'string') {
+    try {
+      parsed.social_links = JSON.parse(parsed.social_links);
+    } catch (e) {
+      console.warn("Failed to parse social_links", e);
+    }
+  }
+  
+  if (typeof parsed.custom_buttons === 'string') {
+    try {
+      parsed.custom_buttons = JSON.parse(parsed.custom_buttons);
+    } catch (e) {
+      console.warn("Failed to parse custom_buttons", e);
+    }
+  }
+
+  if (typeof parsed.custom_colors === 'string') {
+    try {
+      parsed.custom_colors = JSON.parse(parsed.custom_colors);
+    } catch (e) {
+      console.warn("Failed to parse custom_colors", e);
+    }
+  }
+
+  return parsed;
 }
 
 // Ensure the tenant_id in the payload is valid in Directus DB, otherwise set it to null to avoid foreign key violations
@@ -819,7 +870,8 @@ export const dbService = {
     });
     if (!res.ok) throw new Error('خطا در دریافت اطلاعات کارت‌ها از پایگاه داده');
     const json = await res.json();
-    return json?.data || [];
+    const data = json?.data || [];
+    return data.map(parseCardFields);
   },
   getCardBySlug: async (slug: string): Promise<Card | null> => {
     const url = `${DIRECTUS_BASE_URL}/items/cards?filter[slug][_eq]=${encodeURIComponent(slug)}`;
@@ -828,7 +880,7 @@ export const dbService = {
     });
     if (!res.ok) throw new Error('خطا در دریافت اطلاعات کارت با اسلاگ از پایگاه داده');
     const json = await res.json();
-    return json?.data?.[0] || null;
+    return json?.data?.[0] ? parseCardFields(json.data[0]) : null;
   },
   getCardById: async (id: string): Promise<Card | null> => {
     const url = `${DIRECTUS_BASE_URL}/items/cards/${toUUID(id)}`;
@@ -837,7 +889,7 @@ export const dbService = {
     });
     if (!res.ok) return null;
     const json = await res.json();
-    return json?.data || null;
+    return json?.data ? parseCardFields(json.data) : null;
   },
   saveCard: async (card: Card): Promise<void> => {
     const cleanPayload = cleanDataForDirectus(card);
