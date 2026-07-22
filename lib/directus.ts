@@ -864,16 +864,31 @@ export const dbService = {
         return tenantPlans.length > 0 ? tenantPlans : SEED_PLANS;
       }
       return data.map((plan: any) => {
-        let parsedFeatures = plan.features;
-        if (typeof parsedFeatures === 'string') {
+        let parsedFeatures: string[] = [];
+        if (Array.isArray(plan.features)) {
+          parsedFeatures = plan.features;
+        } else if (typeof plan.features === 'string' && plan.features.trim()) {
           try {
-            parsedFeatures = JSON.parse(parsedFeatures);
+            const parsed = JSON.parse(plan.features);
+            if (Array.isArray(parsed)) parsedFeatures = parsed;
+            else if (typeof parsed === 'string') parsedFeatures = [parsed];
           } catch {
-            parsedFeatures = [];
+            if (plan.features.includes('\n')) {
+              parsedFeatures = plan.features.split('\n').map((s: string) => s.trim()).filter(Boolean);
+            } else if (plan.features.includes(',')) {
+              parsedFeatures = plan.features.split(',').map((s: string) => s.trim()).filter(Boolean);
+            } else {
+              parsedFeatures = [plan.features.trim()];
+            }
           }
         }
-        if (!Array.isArray(parsedFeatures)) {
-          parsedFeatures = [];
+
+        // Fallback to SEED_PLANS features if empty
+        if (parsedFeatures.length === 0) {
+          const seedMatch = SEED_PLANS.find(sp => toUUID(sp.id) === toUUID(plan.id) || sp.title === plan.title);
+          if (seedMatch && Array.isArray(seedMatch.features) && seedMatch.features.length > 0) {
+            parsedFeatures = seedMatch.features;
+          }
         }
 
         let parsedTemplates: string[] = [];
@@ -890,6 +905,7 @@ export const dbService = {
           ...plan,
           features: parsedFeatures,
           allowed_templates: parsedTemplates,
+          duration_days: plan.duration_days !== undefined && plan.duration_days !== null ? Number(plan.duration_days) : 30,
           max_cards: plan.max_cards !== undefined && plan.max_cards !== null ? Number(plan.max_cards) : -1,
           custom_domain: Boolean(plan.custom_domain),
           remove_branding: Boolean(plan.remove_branding)

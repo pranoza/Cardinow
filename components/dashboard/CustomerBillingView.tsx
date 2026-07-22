@@ -161,7 +161,7 @@ export function CustomerBillingView({
                   <td className="p-3 font-bold">{tx.amount.toLocaleString('fa-IR')} تومان</td>
                   <td className="p-3">{tx.gateway}</td>
                   <td className="p-3 font-mono">{tx.ref_id}</td>
-                  <td className="p-3 opacity-70">{tx.created_at.split('T')[0]}</td>
+                  <td className="p-3 opacity-70">{tx.created_at ? tx.created_at.split('T')[0] : '-'}</td>
                   <td className="p-3">
                     <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 text-[9px] font-bold rounded-full">
                       موفقیت‌آمیز

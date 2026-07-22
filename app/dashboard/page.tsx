@@ -1565,7 +1565,9 @@ function DashboardContent() {
                               {plan.is_active ? 'فعال در نمایندگی' : 'غیرفعال'}
                             </span>
                           </div>
-                          <span className="text-[10px] text-slate-500 block mt-1">مدت زمان اعتبار: {plan.duration_days} روز</span>
+                          <span className="text-[10px] text-slate-500 block mt-1">
+                            مدت زمان اعتبار: {Number(plan.duration_days) === -1 ? 'نامحدود (دائمی)' : `${plan.duration_days} روز`} | سقف کارت: {Number(plan.max_cards) === -1 ? 'نامحدود' : `${plan.max_cards} عدد`}
+                          </span>
                           <p className="text-emerald-400 font-extrabold text-xs mt-2">{plan.price.toLocaleString('fa-IR')} تومان</p>
                         </div>
 
@@ -1680,7 +1682,7 @@ function DashboardContent() {
                         <td className="p-3">علی علوی (u-1)</td>
                         <td className="p-3">{tx.gateway}</td>
                         <td className="p-3 font-mono">{tx.ref_id}</td>
-                        <td className="p-3 opacity-70">{tx.created_at.split('T')[0]}</td>
+                        <td className="p-3 opacity-70">{tx.created_at ? tx.created_at.split('T')[0] : '-'}</td>
                         <td className="p-3 font-bold text-emerald-400">
                           {Math.round(tx.amount * 0.9).toLocaleString('fa-IR')} تومان (۹۰٪)
                         </td>

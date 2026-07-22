@@ -1052,7 +1052,9 @@ export default function LandingPage() {
                   <div className="space-y-4">
                     <div>
                       <h3 className="text-lg font-bold text-white">{plan.title}</h3>
-                      <p className="text-xs text-slate-500 mt-1">مدت اعتبار: {plan.duration_days} روز</p>
+                      <p className="text-xs text-slate-500 mt-1">
+                        مدت اعتبار: {Number(plan.duration_days) === -1 ? 'نامحدود (دائمی)' : `${plan.duration_days} روز`}
+                      </p>
                     </div>
 
                     <div className="py-2 border-t border-b border-slate-800 flex items-baseline gap-1.5">
@@ -1069,6 +1071,22 @@ export default function LandingPage() {
                     </div>
 
                     <ul className="space-y-2.5 text-xs text-slate-300 font-normal">
+                      <li className="flex items-center gap-2">
+                        <Check className="h-4 w-4 text-blue-500 shrink-0" />
+                        <span>سقف ایجاد کارت: {Number(plan.max_cards) === -1 ? 'نامحدود' : `${plan.max_cards} عدد`}</span>
+                      </li>
+                      {plan.custom_domain && (
+                        <li className="flex items-center gap-2">
+                          <Check className="h-4 w-4 text-emerald-400 shrink-0" />
+                          <span>پشتیبانی از دامنه اختصاصی</span>
+                        </li>
+                      )}
+                      {plan.remove_branding && (
+                        <li className="flex items-center gap-2">
+                          <Check className="h-4 w-4 text-emerald-400 shrink-0" />
+                          <span>حذف برندینگ سامانه</span>
+                        </li>
+                      )}
                       {(plan.features || []).map((feature, idx) => (
                         <li key={idx} className="flex items-start gap-2">
                           <Check className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
