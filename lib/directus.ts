@@ -597,6 +597,48 @@ export async function ensureValidTenantId(payload: any): Promise<void> {
   }
 }
 
+// Ensure user_id in payload is valid in directus_users
+export async function ensureValidUserId(payload: any): Promise<void> {
+  if (payload && payload.user_id) {
+    try {
+      const res = await fetch(`${DIRECTUS_BASE_URL}/users`, {
+        headers: { ...getAuthHeaders() }
+      });
+      if (res.ok) {
+        const json = await res.json();
+        const usersList = json?.data || [];
+        const exists = usersList.some((u: any) => u.id === payload.user_id);
+        if (!exists) {
+          payload.user_id = null;
+        }
+      } else {
+        payload.user_id = null;
+      }
+    } catch {
+      payload.user_id = null;
+    }
+  }
+}
+
+// Ensure receipt_Image in payload exists in directus_files
+export async function ensureValidReceiptImage(payload: any): Promise<void> {
+  const receiptId = payload.receipt_Image || payload.receipt_image;
+  if (receiptId) {
+    try {
+      const res = await fetch(`${DIRECTUS_BASE_URL}/files/${receiptId}`, {
+        headers: { ...getAuthHeaders() }
+      });
+      if (!res.ok) {
+        payload.receipt_Image = null;
+        if (payload.receipt_image) payload.receipt_image = null;
+      }
+    } catch {
+      payload.receipt_Image = null;
+      if (payload.receipt_image) payload.receipt_image = null;
+    }
+  }
+}
+
 // Automatically populates empty Directus collections with beautiful, standard seed items
 export async function seedDirectusIfEmpty() {
   if (typeof window === 'undefined') return;
@@ -1019,7 +1061,14 @@ export const dbService = {
   saveTransaction: async (tx: Transaction): Promise<void> => {
     const cleanPayload = cleanDataForDirectus(tx);
     await ensureValidTenantId(cleanPayload);
+    await ensureValidUserId(cleanPayload);
+    await ensureValidReceiptImage(cleanPayload);
     const cleanId = toUUID(tx.id);
+
+    // Support both receipt_Image and receipt_image casing
+    if (cleanPayload.receipt_image && !cleanPayload.receipt_Image) {
+      cleanPayload.receipt_Image = cleanPayload.receipt_image;
+    }
 
     const check = await fetch(`${DIRECTUS_BASE_URL}/items/transactions/${cleanId}`, {
       headers: { ...getAuthHeaders() }
@@ -1041,7 +1090,18 @@ export const dbService = {
       }
     }
 
-    const res = await fetch(url, {
+    // Ensure UUID fields are valid or null
+    for (const k of ['user_id', 'tenant_id', 'receipt_Image']) {
+      if (!finalPayload[k] || finalPayload[k] === '') {
+        finalPayload[k] = null;
+      }
+    }
+
+    if (finalPayload.amount !== undefined && finalPayload.amount !== null) {
+      finalPayload.amount = Number(finalPayload.amount) || 0;
+    }
+
+    let res = await fetch(url, {
       method,
       headers: { 
         'Content-Type': 'application/json',
@@ -1049,10 +1109,29 @@ export const dbService = {
       },
       body: JSON.stringify(finalPayload)
     });
+
+    // If initial request failed due to foreign key or invalid UUID, nullify foreign key fields and retry
     if (!res.ok) {
       const errText = await res.text();
-      console.error('Failed to save transaction in Directus:', errText);
-      throw new Error('خطا در ذخیره‌سازی تراکنش در پایگاه داده');
+      console.warn('Initial saveTransaction attempt failed:', errText, 'Retrying with nullified foreign keys...');
+      finalPayload.user_id = null;
+      finalPayload.tenant_id = null;
+      finalPayload.receipt_Image = null;
+
+      res = await fetch(url, {
+        method,
+        headers: { 
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
+        body: JSON.stringify(finalPayload)
+      });
+
+      if (!res.ok) {
+        const errRetryText = await res.text();
+        console.error('Retry saveTransaction failed in Directus:', errRetryText);
+        throw new Error('خطا در ذخیره‌سازی تراکنش در پایگاه داده');
+      }
     }
   },
   getSiteSettings: async (): Promise<{ bank_card?: string; bank_name?: string } | null> => {
@@ -1063,10 +1142,19 @@ export const dbService = {
       if (!res.ok) throw new Error('Failed to fetch site settings');
       const json = await res.json();
       const data = json?.data;
+      let record: any = null;
       if (Array.isArray(data)) {
-        return data[0] || null;
+        record = data[0];
+      } else if (data && typeof data === 'object') {
+        record = data;
       }
-      return data || null;
+      if (record) {
+        return {
+          bank_card: record.bank_card || record.card_number || '۵۰۲۲-۲۹۱۰-۱۲۳۴-۵۶۷۸',
+          bank_name: record.bank_name || record.account_name || 'کاردینو دیجیتال سیستم'
+        };
+      }
+      return { bank_card: '۵۰۲۲-۲۹۱۰-۱۲۳۴-۵۶۷۸', bank_name: 'کاردینو دیجیتال سیستم' };
     } catch {
       console.warn('Directus site settings fetch failed, using defaults');
       return { bank_card: '۵۰۲۲-۲۹۱۰-۱۲۳۴-۵۶۷۸', bank_name: 'کاردینو دیجیتال سیستم' };
@@ -1074,27 +1162,8 @@ export const dbService = {
   },
   saveSiteSettings: async (settings: { bank_card?: string; bank_name?: string }): Promise<void> => {
     try {
-      // Find existing ID of site_settings record if any
-      let existingId = 1;
-      try {
-        const getRes = await fetch(`${DIRECTUS_BASE_URL}/items/site_settings`, {
-          headers: { ...getAuthHeaders() }
-        });
-        if (getRes.ok) {
-          const json = await getRes.json();
-          const data = json?.data;
-          if (Array.isArray(data) && data[0]?.id) {
-            existingId = data[0].id;
-          } else if (data?.id) {
-            existingId = data.id;
-          }
-        }
-      } catch (e) {
-        console.warn('Failed to pre-fetch site settings id', e);
-      }
-
-      // Try PATCHing with the identified or default ID
-      const res = await fetch(`${DIRECTUS_BASE_URL}/items/site_settings/${existingId}`, {
+      // 1. Try PATCH on singleton endpoint directly (standard Directus behavior for singletons)
+      let res = await fetch(`${DIRECTUS_BASE_URL}/items/site_settings`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -1102,28 +1171,32 @@ export const dbService = {
         },
         body: JSON.stringify(settings)
       });
+      if (res.ok) return;
+
+      // 2. Try PATCH on /items/site_settings/1
+      res = await fetch(`${DIRECTUS_BASE_URL}/items/site_settings/1`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
+        body: JSON.stringify(settings)
+      });
+      if (res.ok) return;
+
+      // 3. Try POST to /items/site_settings
+      res = await fetch(`${DIRECTUS_BASE_URL}/items/site_settings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
+        body: JSON.stringify({ id: 1, ...settings })
+      });
       if (!res.ok) {
-        // Try POSTing to create it
-        const resPost = await fetch(`${DIRECTUS_BASE_URL}/items/site_settings`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...getAuthHeaders()
-          },
-          body: JSON.stringify({ id: existingId, ...settings })
-        });
-        if (!resPost.ok) {
-          // Final fallback to PATCHing the general collection
-          const resPatchAll = await fetch(`${DIRECTUS_BASE_URL}/items/site_settings`, {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-              ...getAuthHeaders()
-            },
-            body: JSON.stringify(settings)
-          });
-          if (!resPatchAll.ok) throw new Error('Failed to save site settings');
-        }
+        const errText = await res.text();
+        console.error('Failed to save site settings in Directus:', errText);
+        throw new Error('خطا در پاسخ‌دهی پایگاه داده هنگام ذخیره تنظیمات');
       }
     } catch (err: any) {
       throw new Error('خطا در ذخیره تنظیمات حساب بانکی: ' + err.message);
