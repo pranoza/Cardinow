@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { dbService, Card, Template, getImageUrl, parseCardFields } from '../../lib/directus';
+import BrandLogo from '../../components/BrandLogo';
 import { 
   Phone, Mail, Globe, MapPin, Share2, Download, 
   Linkedin, Instagram, Send, MessageCircle, Link as LinkIcon, 
@@ -590,7 +591,8 @@ export default function PublicCardPage() {
               )}
 
               {/* Footer Powered By */}
-              <div className="text-center pt-8 opacity-40 text-[10px]">
+              <div className="flex items-center justify-center gap-2 pt-8 opacity-60 text-[11px] font-medium text-slate-400">
+                <BrandLogo size="sm" className="h-5 w-5" />
                 <span>قدرت گرفته از سامانه کارت ویزیت دیجیتال کاردینو</span>
               </div>
 

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { dbService, Template, Plan, Card } from '../lib/directus';
+import BrandLogo from '../components/BrandLogo';
 import { 
   CreditCard, Smartphone, ShieldCheck, Sparkles, Zap, Award, 
   BarChart3, Globe2, ChevronLeft, ChevronRight, ArrowUpRight, CheckCircle2, 
@@ -102,15 +103,11 @@ export default function LandingPage() {
       {/* 1. HEADER / NAVIGATION */}
       <header className="sticky top-0 z-50 backdrop-blur-md bg-slate-950/80 border-b border-slate-900 px-4 md:px-6 py-3 md:py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 md:h-10 md:w-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-black text-lg md:text-xl shadow-lg shadow-blue-500/20">
-              ک
-            </div>
-            <div>
-              <span className="text-sm md:text-lg font-black tracking-tight bg-gradient-to-l from-white to-slate-400 bg-clip-text text-transparent">سامانه کاردینو</span>
-              <p className="text-[9px] md:text-[10px] text-blue-500 -mt-1 font-bold">کارت ویزیت دیجیتال</p>
-            </div>
-          </div>
+          <BrandLogo 
+            showText 
+            subText="کارت ویزیت دیجیتال"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          />
 
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
             <a href="#features" className="hover:text-blue-500 transition">امکانات کلیدی</a>
@@ -1118,15 +1115,12 @@ export default function LandingPage() {
       {/* 7. FOOTER */}
       <footer className="bg-slate-950 border-t border-slate-900 py-12 px-6 mt-auto">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-sm text-slate-500">
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 font-black">
-              ک
-            </div>
-            <div>
-              <span className="font-bold text-slate-300 text-sm">سامانه کارت ویزیت دیجیتال کاردینو</span>
-              <p className="text-[10px] text-slate-600">میزبانی امن داده‌ها با پایداری ۹۹.۹٪</p>
-            </div>
-          </div>
+          <BrandLogo 
+            size="sm"
+            showText 
+            titleText="سامانه کارت ویزیت دیجیتال کاردینو"
+            subText="میزبانی امن داده‌ها با پایداری ۹۹.۹٪"
+          />
 
           <p className="text-center text-xs opacity-70">
             تمامی حقوق مادی و معنوی محفوظ است. توسعه یافته بر روی بستر کلود با بالاترین سطح حریم خصوصی.

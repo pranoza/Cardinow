@@ -18,6 +18,7 @@ import { CustomerCardsView } from '../../components/dashboard/CustomerCardsView'
 import { AdminTemplatesView } from '../../components/dashboard/AdminTemplatesView';
 import { CustomerBillingView } from '../../components/dashboard/CustomerBillingView';
 import { CustomerAnalyticsView } from '../../components/dashboard/CustomerAnalyticsView';
+import BrandLogo from '../../components/BrandLogo';
 
 function generateRandomUUID(): string {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -718,7 +719,13 @@ function DashboardContent() {
                 <Sparkles className="h-3.5 w-3.5" />
                 <span>اتصال ابری امن و پایدار</span>
               </div>
-              <h2 className="text-3xl font-black text-white">کاردینو (Cardinow)</h2>
+              <div className="flex items-center gap-3">
+                <BrandLogo size="lg" />
+                <div>
+                  <h2 className="text-3xl font-black text-white">کاردینو (Cardinow)</h2>
+                  <p className="text-blue-400 text-xs font-bold mt-0.5">پلتفرم مدیریت کارت ویزیت دیجیتال</p>
+                </div>
+              </div>
               <p className="text-slate-400 text-xs leading-relaxed">
                 سامانه هوشمند طراحی و مدیریت کارت ویزیت دیجیتال و نمایندگی اختصاصی. برای ورود یا ثبت‌نام رایگان از فرم زیر استفاده کنید.
               </p>
@@ -917,18 +924,12 @@ function DashboardContent() {
       <header className="bg-slate-900 border-b border-slate-800 py-4 px-6 shrink-0 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           
-          <div className="flex items-center gap-3">
-            <div 
-              onClick={() => router.push('/')}
-              className="h-10 w-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-black text-xl cursor-pointer"
-            >
-              ک
-            </div>
-            <div>
-              <span className="text-sm font-bold block text-white">پنل هوشمند مدیریت کاردینو</span>
-              <p className="text-[10px] text-slate-400 font-medium">پایگاه داده آنلاین امن و پویا</p>
-            </div>
-          </div>
+          <BrandLogo 
+            showText 
+            titleText="پنل هوشمند مدیریت کاردینو"
+            subText="پایگاه داده آنلاین امن و پویا"
+            onClick={() => router.push('/')}
+          />
 
           <div className="flex items-center gap-4">
             
@@ -2220,9 +2221,10 @@ function DashboardContent() {
 export default function DashboardPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-6 rtl" dir="rtl">
-        <RefreshCw className="h-10 w-10 text-blue-500 animate-spin" />
-        <span className="mt-4 text-slate-400 text-sm font-semibold">در حال بارگذاری پنل کاردینو...</span>
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-6 gap-3 rtl" dir="rtl">
+        <BrandLogo size="lg" className="animate-pulse" />
+        <RefreshCw className="h-6 w-6 text-blue-500 animate-spin mt-2" />
+        <span className="text-slate-400 text-sm font-semibold">در حال بارگذاری پنل کاردینو...</span>
       </div>
     }>
       <DashboardContent />
