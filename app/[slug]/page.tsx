@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { dbService, Card, Template, getImageUrl, parseCardFields } from '../../lib/directus';
+import { saveCardToContacts } from '../../lib/vcard';
 import BrandLogo from '../../components/BrandLogo';
 import { 
   Phone, Mail, Globe, MapPin, Share2, Download, 
@@ -251,30 +252,13 @@ export default function PublicCardPage() {
   const { phone, mobile, extra_phones, whatsapp, telegram, instagram, linkedin, website, email } = card.social_links || {};
 
   // Download VCF Contact Handler
-  const handleDownloadVCard = () => {
-    const vCardContent = [
-      'BEGIN:VCARD',
-      'VERSION:3.0',
-      `FN:${card.first_name} ${card.last_name}`,
-      `N:${card.last_name};${card.first_name};;;`,
-      `ORG:${card.company || ''}`,
-      `TITLE:${card.job_title || ''}`,
-      phone ? `TEL;TYPE=CELL,VOICE:${phone}` : '',
-      email ? `EMAIL;TYPE=PREF,INTERNET:${email}` : '',
-      website ? `URL:${website}` : '',
-      'END:VCARD'
-    ].filter(Boolean).join('\n');
-
-    const blob = new Blob([vCardContent], { type: 'text/vcard;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `${card.first_name}_${card.last_name}.vcf`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    setIsVCardGenerated(true);
-    setTimeout(() => setIsVCardGenerated(false), 3000);
+  const handleDownloadVCard = async () => {
+    if (!card) return;
+    const success = await saveCardToContacts(card);
+    if (success) {
+      setIsVCardGenerated(true);
+      setTimeout(() => setIsVCardGenerated(false), 3000);
+    }
   };
 
   // Share Card Link

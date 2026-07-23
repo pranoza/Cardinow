@@ -956,13 +956,32 @@ export const dbService = {
     return data.map(parseCardFields);
   },
   getCardBySlug: async (slug: string): Promise<Card | null> => {
-    const url = `${DIRECTUS_BASE_URL}/items/cards?filter[slug][_eq]=${encodeURIComponent(slug)}`;
-    const res = await fetch(url, {
-      headers: { ...getAuthHeaders() }
-    });
-    if (!res.ok) throw new Error('خطا در دریافت اطلاعات کارت با اسلاگ از پایگاه داده');
-    const json = await res.json();
-    return json?.data?.[0] ? parseCardFields(json.data[0]) : null;
+    if (!slug || !slug.trim()) return null;
+    const cleanSlug = slug.trim().toLowerCase();
+    try {
+      // 1. Try case-insensitive _ieq query
+      let url = `${DIRECTUS_BASE_URL}/items/cards?filter[slug][_ieq]=${encodeURIComponent(cleanSlug)}`;
+      let res = await fetch(url, { headers: { ...getAuthHeaders() } });
+      
+      // 2. If _ieq failed, try standard _eq
+      if (!res.ok) {
+        url = `${DIRECTUS_BASE_URL}/items/cards?filter[slug][_eq]=${encodeURIComponent(cleanSlug)}`;
+        res = await fetch(url, { headers: { ...getAuthHeaders() } });
+      }
+
+      // 3. If role/auth permission issue (403), try public request without auth header
+      if (!res.ok) {
+        url = `${DIRECTUS_BASE_URL}/items/cards?filter[slug][_eq]=${encodeURIComponent(cleanSlug)}`;
+        res = await fetch(url);
+      }
+
+      if (!res.ok) return null;
+      const json = await res.json();
+      return json?.data?.[0] ? parseCardFields(json.data[0]) : null;
+    } catch (e) {
+      console.warn("getCardBySlug query error:", e);
+      return null;
+    }
   },
   getCardById: async (id: string): Promise<Card | null> => {
     const url = `${DIRECTUS_BASE_URL}/items/cards/${toUUID(id)}`;

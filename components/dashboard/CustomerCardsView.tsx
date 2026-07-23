@@ -9,6 +9,7 @@ import {
   Phone, Mail, Send, MessageCircle, ChevronLeft, MapPin, Instagram, Linkedin, Download, QrCode
 } from 'lucide-react';
 import { Card, Template, toUUID, getImageUrl, dbService } from '../../lib/directus';
+import { saveCardToContacts } from '../../lib/vcard';
 
 export interface CustomerCardsViewProps {
   user: any;
@@ -86,9 +87,15 @@ export function CustomerCardsView({
 
   // Real-time Slug Check State
   const [slugStatus, setSlugStatus] = React.useState<'empty' | 'too_short' | 'checking' | 'taken' | 'available'>('empty');
+  const [isSlugTouched, setIsSlugTouched] = React.useState(false);
+
+  // Reset isSlugTouched whenever editingCard opens/changes
+  React.useEffect(() => {
+    setIsSlugTouched(false);
+  }, [editingCard?.id]);
 
   React.useEffect(() => {
-    if (!editingCard) return;
+    if (!editingCard || !isSlugTouched) return;
     const rawSlug = (editingCard.slug || '').trim().toLowerCase();
     if (!rawSlug) {
       setSlugStatus('empty');
@@ -99,7 +106,7 @@ export function CustomerCardsView({
       return;
     }
 
-    // Local check against existing cards list
+    // Local check against existing cards list in state
     const isTakenLocally = cards.some(
       c => toUUID(c.id) !== toUUID(editingCard.id) && (c.slug || '').trim().toLowerCase() === rawSlug
     );
@@ -116,13 +123,15 @@ export function CustomerCardsView({
       try {
         const existing = await dbService.getCardBySlug(rawSlug);
         if (!isMounted) return;
-        if (existing && toUUID(existing.id) !== toUUID(editingCard.id)) {
+        if (existing && toUUID(existing.id) !== toUUID(editingCard.id) && (existing.slug || '').trim().toLowerCase() === rawSlug) {
           setSlugStatus('taken');
         } else {
           setSlugStatus('available');
         }
       } catch {
-        if (isMounted) setSlugStatus('available');
+        if (isMounted) {
+          setSlugStatus(isTakenLocally ? 'taken' : 'available');
+        }
       }
     }, 350);
 
@@ -130,7 +139,7 @@ export function CustomerCardsView({
       isMounted = false;
       clearTimeout(timer);
     };
-  }, [editingCard?.slug, editingCard?.id, cards]);
+  }, [editingCard?.slug, editingCard?.id, cards, isSlugTouched]);
 
   // Dynamic Base URL Helper
   const getCardBaseUrl = () => {
@@ -496,72 +505,77 @@ export function CustomerCardsView({
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <label className="font-bold text-slate-400 text-xs block">لینک اختصاصی کارت (Slug):</label>
-                      <div className="relative flex items-center">
-                        {/* Domain prefix label on RTL right side */}
-                        <div className="absolute right-0 top-0 bottom-0 px-2.5 bg-slate-800/90 text-slate-400 font-mono text-[11px] flex items-center rounded-r-lg border-l border-slate-700/80 dir-ltr select-none">
-                          {getCardBaseUrl().replace(/^https?:\/\//, '')}/
-                        </div>
-                        
-                        <input 
-                          type="text" 
-                          value={editingCard.slug || ''} 
-                          onChange={(e) => setEditingCard({ ...editingCard, slug: e.target.value.replace(/[^a-zA-Z0-9-]/g, '') })}
-                          className={`w-full pr-[140px] pl-20 py-2 bg-slate-900 border rounded-lg focus:outline-none text-left font-mono text-xs text-white transition ${
-                            slugStatus === 'available' 
-                              ? 'border-emerald-500/80 focus:border-emerald-400 bg-emerald-950/10' 
-                              : slugStatus === 'taken' 
-                              ? 'border-red-500/80 focus:border-red-400 bg-red-950/10' 
-                              : 'border-slate-800 focus:border-blue-500'
-                          }`}
-                          placeholder="ali-alavi"
-                        />
-
-                        {/* Status badge overlay on LTR left side */}
-                        <div className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center">
-                          {slugStatus === 'available' && (
-                            <span className="text-[10px] text-emerald-400 font-extrabold flex items-center gap-1 bg-emerald-500/15 px-2 py-0.5 rounded-md border border-emerald-500/30">
-                              <Check className="h-3 w-3" /> آزاد
-                            </span>
-                          )}
-                          {slugStatus === 'taken' && (
-                            <span className="text-[10px] text-red-400 font-extrabold flex items-center gap-1 bg-red-500/15 px-2 py-0.5 rounded-md border border-red-500/30">
-                              ✕ تکراری
-                            </span>
-                          )}
-                          {slugStatus === 'checking' && (
-                            <span className="text-[10px] text-blue-400 font-bold flex items-center gap-1 bg-blue-500/10 px-2 py-0.5 rounded-md">
-                              <RefreshCw className="h-3 w-3 animate-spin" /> ...
-                            </span>
-                          )}
-                          {slugStatus === 'too_short' && (
-                            <span className="text-[9px] text-amber-400 font-medium px-1.5 py-0.5 bg-amber-500/10 rounded">
-                              حداقل ۲ حرف
-                            </span>
-                          )}
-                        </div>
+                      <div className="flex items-center justify-between">
+                        <label className="font-bold text-slate-300 text-xs">لینک اختصاصی کارت (Slug):</label>
+                        {isSlugTouched && slugStatus === 'available' && (
+                          <span className="text-[10px] text-emerald-400 font-extrabold flex items-center gap-1 bg-emerald-500/15 px-2 py-0.5 rounded-md border border-emerald-500/30">
+                            <Check className="h-3 w-3" /> آزاد
+                          </span>
+                        )}
+                        {isSlugTouched && slugStatus === 'taken' && (
+                          <span className="text-[10px] text-red-400 font-extrabold flex items-center gap-1 bg-red-500/15 px-2 py-0.5 rounded-md border border-red-500/30">
+                            ✕ تکراری
+                          </span>
+                        )}
+                        {isSlugTouched && slugStatus === 'checking' && (
+                          <span className="text-[10px] text-blue-400 font-bold flex items-center gap-1 bg-blue-500/10 px-2 py-0.5 rounded-md">
+                            <RefreshCw className="h-3 w-3 animate-spin" /> ...
+                          </span>
+                        )}
+                        {isSlugTouched && slugStatus === 'too_short' && (
+                          <span className="text-[9px] text-amber-400 font-medium px-1.5 py-0.5 bg-amber-500/10 rounded">
+                            حداقل ۲ حرف
+                          </span>
+                        )}
                       </div>
 
-                      {/* Fixed height row to prevent layout jumps */}
+                      <div 
+                        className={`flex items-center bg-slate-900 border rounded-lg overflow-hidden transition ${
+                          isSlugTouched && slugStatus === 'available' 
+                            ? 'border-emerald-500/80 bg-emerald-950/10' 
+                            : isSlugTouched && slugStatus === 'taken' 
+                            ? 'border-red-500/80 bg-red-950/10' 
+                            : 'border-slate-800 focus-within:border-blue-500'
+                        }`}
+                        dir="ltr"
+                      >
+                        <span className="px-2.5 py-2 bg-slate-800/80 text-slate-400 font-mono text-xs border-r border-slate-700/80 select-none shrink-0 dir-ltr">
+                          {getCardBaseUrl().replace(/^https?:\/\//, '')}/
+                        </span>
+                        <input 
+                          type="text" 
+                          dir="ltr"
+                          value={editingCard.slug || ''} 
+                          onFocus={() => setIsSlugTouched(true)}
+                          onChange={(e) => {
+                            setIsSlugTouched(true);
+                            setEditingCard({ ...editingCard, slug: e.target.value.replace(/[^a-zA-Z0-9-]/g, '') });
+                          }}
+                          className="w-full px-2.5 py-2 bg-transparent text-left font-mono text-xs text-white focus:outline-none"
+                          placeholder="ali-alavi"
+                        />
+                      </div>
+
+                      {/* Helper status text */}
                       <div className="h-4 flex items-center">
-                        {slugStatus === 'available' && (
+                        {isSlugTouched && slugStatus === 'available' && (
                           <p className="text-[10px] text-emerald-400 font-medium dir-ltr text-right truncate w-full">
                             ✓ آدرس نهایی: <span className="font-mono underline">{getCardBaseUrl()}/{editingCard.slug}</span>
                           </p>
                         )}
-                        {slugStatus === 'taken' && (
+                        {isSlugTouched && slugStatus === 'taken' && (
                           <p className="text-[10px] text-red-400 font-medium truncate w-full">
-                            ✕ این لینک قبلاً ثبت شده است.
+                            ✕ این لینک قبلاً ثبت شده است. لطفاً لینک دیگری تایپ کنید.
                           </p>
                         )}
-                        {slugStatus === 'too_short' && (
-                          <p className="text-[10px] text-amber-400/90 font-medium truncate w-full">
-                            ⚠ فقط حروف انگلیسی، اعداد و خط تیره (-) مجاز است.
+                        {isSlugTouched && slugStatus === 'too_short' && (
+                          <p className="text-[10px] text-amber-400 font-medium truncate w-full">
+                            ⚠ حداقل ۲ کاراکتر انگلیسی وارد کنید.
                           </p>
                         )}
-                        {(slugStatus === 'empty' || !slugStatus) && (
+                        {(!isSlugTouched || slugStatus === 'empty') && (
                           <p className="text-[10px] text-slate-500 truncate w-full">
-                            آدرس لینک اختصاصی کارت دیجیتال شما
+                            فقط حروف انگلیسی، اعداد و خط تیره (-) | نمونه: ali-alavi
                           </p>
                         )}
                       </div>
@@ -1392,7 +1406,11 @@ export function CustomerCardsView({
                             )}
 
                             {/* Download contact mockup */}
-                            <div className="w-full py-1.5 rounded-lg text-white flex items-center justify-center gap-1 text-[8px] font-bold shadow-sm cursor-pointer" style={{ backgroundColor: primaryColor }}>
+                            <div 
+                              onClick={() => editingCard && saveCardToContacts(editingCard)}
+                              className="w-full py-1.5 rounded-lg text-white flex items-center justify-center gap-1 text-[8px] font-bold shadow-sm cursor-pointer hover:opacity-90 active:scale-95 transition" 
+                              style={{ backgroundColor: primaryColor }}
+                            >
                               <Download className="h-2.5 w-2.5" />
                               <span>ذخیره در مخاطبین گوشی</span>
                             </div>
@@ -1844,7 +1862,11 @@ export function CustomerCardsView({
                             )}
 
                             {/* Download contact mockup */}
-                            <div className="w-full py-1 rounded-lg text-white flex items-center justify-center gap-1 text-[7.5px] font-bold shadow-sm cursor-pointer" style={{ backgroundColor: primaryColor }}>
+                            <div 
+                              onClick={() => editingCard && saveCardToContacts(editingCard)}
+                              className="w-full py-1 rounded-lg text-white flex items-center justify-center gap-1 text-[7.5px] font-bold shadow-sm cursor-pointer hover:opacity-90 active:scale-95 transition" 
+                              style={{ backgroundColor: primaryColor }}
+                            >
                               <Download className="h-2.5 w-2.5" />
                               <span>ذخیره در مخاطبین</span>
                             </div>
@@ -2313,8 +2335,13 @@ export function CustomerCardsView({
                               )}
 
                               {/* Save contacts */}
-                              <div className="w-full py-1 rounded-lg text-white text-center text-[7.5px] font-bold cursor-pointer" style={{ backgroundColor: pColor }}>
-                                ذخیره در دفترچه مخاطبین
+                              <div 
+                                onClick={() => editingCard && saveCardToContacts(editingCard)}
+                                className="w-full py-1 rounded-lg text-white text-center text-[7.5px] font-bold cursor-pointer hover:opacity-90 active:scale-95 transition flex items-center justify-center gap-1" 
+                                style={{ backgroundColor: pColor }}
+                              >
+                                <Download className="h-2.5 w-2.5" />
+                                <span>ذخیره در دفترچه مخاطبین</span>
                               </div>
 
                               {/* Connections Grid */}
