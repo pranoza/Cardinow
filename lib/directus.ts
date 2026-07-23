@@ -760,6 +760,31 @@ export async function syncWithDirectus() {
   await seedDirectusIfEmpty();
 }
 
+// TOKEN EXPIRATION LISTENER & NOTIFIER
+type TokenExpiredCallback = (msg: string) => void;
+let tokenExpiredHandler: TokenExpiredCallback | null = null;
+
+export function onTokenExpired(callback: TokenExpiredCallback | null) {
+  tokenExpiredHandler = callback;
+}
+
+export function notifyTokenExpired(message?: string) {
+  if (typeof window === 'undefined') return;
+  authService.logout();
+  const msg = message || 'نشست کاربری شما منقضی شده است. لطفاً مجدداً وارد حساب کاربری خود شوید.';
+  if (tokenExpiredHandler) {
+    tokenExpiredHandler(msg);
+  }
+}
+
+// HELPER TO CHECK FOR AUTH 401/403 RESPONSES
+export function checkAuthResponse(res: Response) {
+  if (res.status === 401) {
+    notifyTokenExpired('توکن شما منقضی شده است. لطفاً مجدداً وارد حساب کاربری شوید.');
+    throw new Error('نشست شما منقضی شده است.');
+  }
+}
+
 // HELPER TO GET DIRECTUS AUTHORIZATION HEADERS FOR CURRENT USER
 export function getAuthHeaders(): { [key: string]: string } {
   if (typeof window === 'undefined') return {};
@@ -1592,5 +1617,28 @@ export const authService = {
 
   logout: (): void => {
     localStorage.removeItem('digital_card_session');
+  },
+
+  verifySession: async (): Promise<boolean> => {
+    if (typeof window === 'undefined') return true;
+    const sessionStr = localStorage.getItem('digital_card_session');
+    if (!sessionStr) return false;
+    try {
+      const session = JSON.parse(sessionStr);
+      if (!session || !session.access_token) return true; // Demo or local session
+      
+      const res = await fetch(`${DIRECTUS_BASE_URL}/users/me`, {
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
+      });
+
+      if (res.status === 401 || res.status === 403) {
+        notifyTokenExpired('توکن کاربری شما منقضی شده است. لطفاً مجدداً وارد حساب کاربری شوید.');
+        return false;
+      }
+      return res.ok;
+    } catch (e) {
+      console.warn("Session token verification check failed:", e);
+      return true;
+    }
   }
 };

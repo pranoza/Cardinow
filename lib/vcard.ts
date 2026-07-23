@@ -43,22 +43,24 @@ export function createVCardString(card: Card): string {
     });
   }
 
-  const fullName = `${card.first_name || ''} ${card.last_name || ''}`.trim() || 'مخاطب';
+  const firstName = card.first_name || '';
+  const lastName = card.last_name || '';
+  const fullName = `${firstName} ${lastName}`.trim() || 'مخاطب کاردینو';
 
   const telLines = phoneNumbers.map(p => `TEL;TYPE=${p.type}:${p.number}`);
 
   const vCardLines = [
     'BEGIN:VCARD',
     'VERSION:3.0',
-    `FN:${fullName}`,
-    `N:${card.last_name || ''};${card.first_name || ''};;;`,
-    card.company ? `ORG:${card.company}` : '',
-    card.job_title ? `TITLE:${card.job_title}` : '',
+    `FN;CHARSET=UTF-8:${fullName}`,
+    `N;CHARSET=UTF-8:${lastName};${firstName};;;`,
+    card.company ? `ORG;CHARSET=UTF-8:${card.company}` : '',
+    card.job_title ? `TITLE;CHARSET=UTF-8:${card.job_title}` : '',
     ...telLines,
     email ? `EMAIL;TYPE=PREF,INTERNET:${email}` : '',
     website ? `URL:${website}` : '',
-    card.address ? `ADR;TYPE=WORK:;;${card.address};;;;` : '',
-    card.bio ? `NOTE:${card.bio.replace(/\r?\n/g, ' ')}` : '',
+    card.address ? `ADR;TYPE=WORK;CHARSET=UTF-8:;;${card.address};;;;` : '',
+    card.bio ? `NOTE;CHARSET=UTF-8:${card.bio.replace(/\r?\n/g, ' ')}` : '',
     'END:VCARD'
   ].filter(Boolean);
 
@@ -71,38 +73,67 @@ export async function saveCardToContacts(card: Card): Promise<boolean> {
   const fullName = `${card.first_name || 'contact'}_${card.last_name || 'card'}`.replace(/\s+/g, '_');
   const fileName = `${fullName}.vcf`;
 
-  // 1. Web Share API with File object (Supported on modern iOS Safari & Android Chrome)
-  if (typeof navigator !== 'undefined' && navigator.share && navigator.canShare) {
-    try {
-      const file = new File([vCardString], fileName, { type: 'text/vcard' });
-      if (navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: `${card.first_name} ${card.last_name}`,
-          text: `ذخیره مخاطب ${card.first_name} ${card.last_name}`
-        });
-        return true;
-      }
-    } catch (e) {
-      // User cancelled share or share failed, fallback
-      console.log('Web Share API for vCard failed/cancelled, falling back...', e);
-    }
-  }
+  if (typeof navigator === 'undefined' || typeof window === 'undefined') return false;
 
-  // 2. Direct data URI navigation for Mobile Safari & Mobile Browsers
-  const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  if (isMobile) {
+  const userAgent = navigator.userAgent || '';
+  const isIOS = /iPad|iPhone|iPod/.test(userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isAndroid = /Android/i.test(userAgent);
+
+  // 1. SPECIFIC HANDLING FOR iOS (Safari / Chrome on iPhone & iPad)
+  if (isIOS) {
     try {
-      const encoded = encodeURIComponent(vCardString);
-      const dataUri = `data:text/vcard;charset=utf-8,${encoded}`;
-      window.location.href = dataUri;
+      // On iOS Safari, opening a Blob URL with text/vcard WITHOUT setting the 'download' attribute
+      // instructs Safari to open the native iOS Contacts import modal directly.
+      const blob = new Blob([vCardString], { type: 'text/vcard;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      // CRITICAL: Do NOT set link.download attribute on iOS!
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
       return true;
     } catch (e) {
-      console.warn("data URI navigation failed, fallback to blob download:", e);
+      console.warn("iOS Blob URL vCard navigation failed, attempting base64 data URI fallback:", e);
+      try {
+        const utf8Bytes = new TextEncoder().encode(vCardString);
+        let binary = '';
+        for (let i = 0; i < utf8Bytes.length; i++) {
+          binary += String.fromCharCode(utf8Bytes[i]);
+        }
+        const base64VCard = btoa(binary);
+        const dataUri = `data:text/x-vcard;charset=utf-8;base64,${base64VCard}`;
+        window.location.href = dataUri;
+        return true;
+      } catch (err) {
+        console.error("iOS base64 fallback failed:", err);
+      }
     }
   }
 
-  // 3. Fallback file download for Desktop or unsupported browsers
+  // 2. SPECIFIC HANDLING FOR ANDROID (Chrome / Web Share API)
+  if (isAndroid) {
+    if (navigator.share && navigator.canShare) {
+      try {
+        const file = new File([vCardString], fileName, { type: 'text/vcard' });
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: `${card.first_name || ''} ${card.last_name || ''}`.trim(),
+            text: `ذخیره مخاطب`
+          });
+          return true;
+        }
+      } catch (e) {
+        console.log("Android Web Share skipped/failed, falling back to download...", e);
+      }
+    }
+  }
+
+  // 3. DESKTOP & FALLBACK DOWNLOAD FOR OTHER BROWSERS
   try {
     const blob = new Blob([vCardString], { type: 'text/vcard;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -112,7 +143,7 @@ export async function saveCardToContacts(card: Card): Promise<boolean> {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
     return true;
   } catch (err) {
     console.error("Failed to save contact:", err);

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { 
-  dbService, authService, initializeDB, Card, Tenant, Template, Plan, Subscription, Transaction, UserSession, CardAnalytics, toUUID, sanitizeDbError, getImageUrl, toJalaliDate
+  dbService, authService, initializeDB, Card, Tenant, Template, Plan, Subscription, Transaction, UserSession, CardAnalytics, toUUID, sanitizeDbError, getImageUrl, toJalaliDate, onTokenExpired
 } from '../../lib/directus';
 import { 
   Plus, Edit2, Trash2, Globe, ExternalLink, Copy, Check, Eye, Save, Search, 
@@ -257,8 +257,25 @@ function DashboardContent() {
   // Load state
   useEffect(() => {
     initializeDB();
+
+    // Subscribe to token expiration notification listener
+    onTokenExpired((msg) => {
+      setUser(null);
+      setAuthError(msg);
+      setAuthMode('login');
+    });
+
     const loadSession = async () => {
       setLoading(true);
+
+      // Verify token validity with server if session active
+      const isValid = await authService.verifySession();
+      if (!isValid) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
       const session = authService.getCurrentUser();
       setUser(session);
 
