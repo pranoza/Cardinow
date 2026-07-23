@@ -496,31 +496,18 @@ export function CustomerCardsView({
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <label className="font-bold text-slate-400">لینک اختصاصی کارت (Slug):</label>
-                        {slugStatus === 'available' && (
-                          <span className="text-[10px] text-emerald-400 font-extrabold flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                            <Check className="h-3 w-3" /> آزاد و معتبر
-                          </span>
-                        )}
-                        {slugStatus === 'taken' && (
-                          <span className="text-[10px] text-red-400 font-extrabold flex items-center gap-1 bg-red-500/10 px-2 py-0.5 rounded-full border border-red-500/20">
-                            ✕ تکراری
-                          </span>
-                        )}
-                        {slugStatus === 'checking' && (
-                          <span className="text-[10px] text-blue-400 font-bold flex items-center gap-1">
-                            <RefreshCw className="h-3 w-3 animate-spin" /> در حال بررسی...
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="relative">
+                      <label className="font-bold text-slate-400 text-xs block">لینک اختصاصی کارت (Slug):</label>
+                      <div className="relative flex items-center">
+                        {/* Domain prefix label on RTL right side */}
+                        <div className="absolute right-0 top-0 bottom-0 px-2.5 bg-slate-800/90 text-slate-400 font-mono text-[11px] flex items-center rounded-r-lg border-l border-slate-700/80 dir-ltr select-none">
+                          {getCardBaseUrl().replace(/^https?:\/\//, '')}/
+                        </div>
+                        
                         <input 
                           type="text" 
                           value={editingCard.slug || ''} 
                           onChange={(e) => setEditingCard({ ...editingCard, slug: e.target.value.replace(/[^a-zA-Z0-9-]/g, '') })}
-                          className={`w-full px-3 py-2 bg-slate-900 border rounded-lg focus:outline-none text-left font-mono text-white transition ${
+                          className={`w-full pr-[140px] pl-20 py-2 bg-slate-900 border rounded-lg focus:outline-none text-left font-mono text-xs text-white transition ${
                             slugStatus === 'available' 
                               ? 'border-emerald-500/80 focus:border-emerald-400 bg-emerald-950/10' 
                               : slugStatus === 'taken' 
@@ -529,39 +516,55 @@ export function CustomerCardsView({
                           }`}
                           placeholder="ali-alavi"
                         />
-                        {slugStatus === 'available' && (
-                          <div className="absolute left-2.5 top-2.5 text-emerald-400">
-                            <Check className="h-4 w-4" />
-                          </div>
-                        )}
-                        {slugStatus === 'taken' && (
-                          <div className="absolute left-2.5 top-2.5 text-red-400 font-bold text-xs">
-                            ✕
-                          </div>
-                        )}
+
+                        {/* Status badge overlay on LTR left side */}
+                        <div className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center">
+                          {slugStatus === 'available' && (
+                            <span className="text-[10px] text-emerald-400 font-extrabold flex items-center gap-1 bg-emerald-500/15 px-2 py-0.5 rounded-md border border-emerald-500/30">
+                              <Check className="h-3 w-3" /> آزاد
+                            </span>
+                          )}
+                          {slugStatus === 'taken' && (
+                            <span className="text-[10px] text-red-400 font-extrabold flex items-center gap-1 bg-red-500/15 px-2 py-0.5 rounded-md border border-red-500/30">
+                              ✕ تکراری
+                            </span>
+                          )}
+                          {slugStatus === 'checking' && (
+                            <span className="text-[10px] text-blue-400 font-bold flex items-center gap-1 bg-blue-500/10 px-2 py-0.5 rounded-md">
+                              <RefreshCw className="h-3 w-3 animate-spin" /> ...
+                            </span>
+                          )}
+                          {slugStatus === 'too_short' && (
+                            <span className="text-[9px] text-amber-400 font-medium px-1.5 py-0.5 bg-amber-500/10 rounded">
+                              حداقل ۲ حرف
+                            </span>
+                          )}
+                        </div>
                       </div>
 
-                      {/* Helper status text */}
-                      {slugStatus === 'available' && (
-                        <p className="text-[10px] text-emerald-400 font-medium dir-ltr text-right">
-                          ✓ آدرس نهایی: <span className="font-mono underline">{getCardBaseUrl()}/{editingCard.slug}</span>
-                        </p>
-                      )}
-                      {slugStatus === 'taken' && (
-                        <p className="text-[10px] text-red-400 font-medium">
-                          ✕ این لینک (Slug) قبلاً توسط کارت دیگری ثبت شده است. لطفاً عبارت دیگری تایپ کنید.
-                        </p>
-                      )}
-                      {slugStatus === 'too_short' && (
-                        <p className="text-[10px] text-amber-400 font-medium">
-                          ⚠ حداقل ۲ کاراکتر انگلیسی وارد کنید.
-                        </p>
-                      )}
-                      {slugStatus === 'empty' && (
-                        <p className="text-[10px] text-slate-500">
-                          حروف انگلیسی، اعداد و خط تیره (-)
-                        </p>
-                      )}
+                      {/* Fixed height row to prevent layout jumps */}
+                      <div className="h-4 flex items-center">
+                        {slugStatus === 'available' && (
+                          <p className="text-[10px] text-emerald-400 font-medium dir-ltr text-right truncate w-full">
+                            ✓ آدرس نهایی: <span className="font-mono underline">{getCardBaseUrl()}/{editingCard.slug}</span>
+                          </p>
+                        )}
+                        {slugStatus === 'taken' && (
+                          <p className="text-[10px] text-red-400 font-medium truncate w-full">
+                            ✕ این لینک قبلاً ثبت شده است.
+                          </p>
+                        )}
+                        {slugStatus === 'too_short' && (
+                          <p className="text-[10px] text-amber-400/90 font-medium truncate w-full">
+                            ⚠ فقط حروف انگلیسی، اعداد و خط تیره (-) مجاز است.
+                          </p>
+                        )}
+                        {(slugStatus === 'empty' || !slugStatus) && (
+                          <p className="text-[10px] text-slate-500 truncate w-full">
+                            آدرس لینک اختصاصی کارت دیجیتال شما
+                          </p>
+                        )}
+                      </div>
                     </div>
 
                     <div className="space-y-1">
@@ -1321,7 +1324,7 @@ export function CustomerCardsView({
                 <div className="h-1 w-8 rounded-full bg-slate-900"></div>
               </div>
 
-              <div className="flex-grow overflow-y-auto bg-slate-900 text-slate-100 flex flex-col font-sans select-none" dir="rtl">
+              <div className="flex-grow overflow-y-auto flex flex-col font-sans select-none transition-colors duration-200" dir="rtl" style={{ backgroundColor: editingCard.custom_colors?.background || '#f1f5f9', color: editingCard.custom_colors?.text || '#1e293b' }}>
                 {(() => {
                   const templateId = editingCard.template_id;
                   const isClassic = templateId === 'temp-1' || templateId === 'classic' || templateId === '11111111-1111-1111-1111-111111111111';
@@ -1329,10 +1332,11 @@ export function CustomerCardsView({
                   const isMinimal = templateId === 'temp-3' || templateId === 'minimal' || templateId === '33333333-3333-3333-3333-333333333333';
                   const isLuxuryDark = templateId === 'temp-4' || templateId === 'luxury-dark' || templateId === '44444444-4444-4444-4444-444444444444';
 
-                  const primaryColor = editingCard.custom_colors?.primary || '#3b82f6';
-                  const secondaryColor = editingCard.custom_colors?.secondary || '#64748b';
+                  const primaryColor = editingCard.custom_colors?.primary || '#2563eb';
+                  const secondaryColor = editingCard.custom_colors?.secondary || '#3b82f6';
                   const cardBg = editingCard.custom_colors?.card_bg || '#ffffff';
                   const textColor = editingCard.custom_colors?.text || '#1e293b';
+                  const bgColor = editingCard.custom_colors?.background || '#f1f5f9';
 
                   // Check if it is a custom template from Directus (not one of the 4 hardcoded)
                   const isCustomTemplate = !isClassic && !isNeonGlass && !isMinimal && !isLuxuryDark;
@@ -2246,12 +2250,12 @@ export function CustomerCardsView({
                         const tColors = tSchema.colors || {};
                         const tLayout = tSchema.layout || {};
 
-                        const pColor = tColors.primary || '#8d5b4c';
-                        const sColor = tColors.secondary || '#f4ece1';
-                        const bColor = tColors.background || '#faf6f0';
-                        const txtColor = tColors.text || '#2d221e';
+                        const pColor = editingCard.custom_colors?.primary || tColors.primary || '#8d5b4c';
+                        const sColor = editingCard.custom_colors?.secondary || tColors.secondary || '#f4ece1';
+                        const bColor = editingCard.custom_colors?.background || tColors.background || '#faf6f0';
+                        const txtColor = editingCard.custom_colors?.text || tColors.text || '#2d221e';
                         const txtSecColor = tColors.text_secondary || '#6e5a53';
-                        const customCardBg = isDarkTheme ? '#18181b' : '#ffffff';
+                        const customCardBg = editingCard.custom_colors?.card_bg || (isDarkTheme ? '#18181b' : '#ffffff');
                         
                         const isCircleAvatar = (tLayout.avatar_shape || 'circle') === 'circle';
                         const isSplitHeader = tLayout.header_style === 'split';
