@@ -534,6 +534,30 @@ export function toUUID(id: string | null | undefined): string {
   return parts.join('-');
 }
 
+// Convert any Gregorian date string or Date object to Solar Hijri (Jalali) date string
+export function toJalaliDate(dateInput: string | Date | null | undefined, options?: { latinDigits?: boolean }): string {
+  if (!dateInput) return '-';
+  try {
+    const dateStr = typeof dateInput === 'string' ? dateInput.trim() : dateInput;
+    const d = typeof dateStr === 'string' ? new Date(dateStr) : dateStr;
+    if (isNaN(d.getTime())) return String(dateInput);
+    
+    const formatter = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+    
+    let formatted = formatter.format(d);
+    if (options?.latinDigits) {
+      formatted = formatted.replace(/[۰-۹]/g, (w) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(w)));
+    }
+    return formatted;
+  } catch {
+    return String(dateInput);
+  }
+}
+
 // Cleans objects and translates standard keys to valid UUID format for Directus compatibility
 export function cleanDataForDirectus(obj: any): any {
   if (!obj || typeof obj !== 'object') return obj;
@@ -959,25 +983,44 @@ export const dbService = {
     if (!slug || !slug.trim()) return null;
     const cleanSlug = slug.trim().toLowerCase();
     try {
-      // 1. Try case-insensitive _ieq query
-      let url = `${DIRECTUS_BASE_URL}/items/cards?filter[slug][_ieq]=${encodeURIComponent(cleanSlug)}`;
-      let res = await fetch(url, { headers: { ...getAuthHeaders() } });
-      
-      // 2. If _ieq failed, try standard _eq
-      if (!res.ok) {
-        url = `${DIRECTUS_BASE_URL}/items/cards?filter[slug][_eq]=${encodeURIComponent(cleanSlug)}`;
-        res = await fetch(url, { headers: { ...getAuthHeaders() } });
-      }
+      // 1. PUBLIC search without auth headers (so user role scope won't restrict results to current user only)
+      let url = `${DIRECTUS_BASE_URL}/items/cards?filter[slug][_eq]=${encodeURIComponent(cleanSlug)}&limit=1`;
+      let res = await fetch(url);
+      let json = res.ok ? await res.json() : null;
+      let cardData = json?.data?.[0];
 
-      // 3. If role/auth permission issue (403), try public request without auth header
-      if (!res.ok) {
-        url = `${DIRECTUS_BASE_URL}/items/cards?filter[slug][_eq]=${encodeURIComponent(cleanSlug)}`;
+      // 2. Case-insensitive _ieq query without auth headers
+      if (!cardData) {
+        url = `${DIRECTUS_BASE_URL}/items/cards?filter[slug][_ieq]=${encodeURIComponent(cleanSlug)}&limit=1`;
         res = await fetch(url);
+        if (res.ok) {
+          json = await res.json();
+          cardData = json?.data?.[0];
+        }
       }
 
-      if (!res.ok) return null;
-      const json = await res.json();
-      return json?.data?.[0] ? parseCardFields(json.data[0]) : null;
+      // 3. System-wide cards scan as fail-safe across all public cards
+      if (!cardData) {
+        url = `${DIRECTUS_BASE_URL}/items/cards?limit=-1`;
+        res = await fetch(url);
+        if (res.ok) {
+          json = await res.json();
+          const allCards = json?.data || [];
+          cardData = allCards.find((c: any) => (c.slug || '').trim().toLowerCase() === cleanSlug);
+        }
+      }
+
+      // 4. Fallback query WITH auth headers if public endpoint failed
+      if (!cardData) {
+        url = `${DIRECTUS_BASE_URL}/items/cards?filter[slug][_eq]=${encodeURIComponent(cleanSlug)}&limit=1`;
+        res = await fetch(url, { headers: { ...getAuthHeaders() } });
+        if (res.ok) {
+          json = await res.json();
+          cardData = json?.data?.[0];
+        }
+      }
+
+      return cardData ? parseCardFields(cardData) : null;
     } catch (e) {
       console.warn("getCardBySlug query error:", e);
       return null;

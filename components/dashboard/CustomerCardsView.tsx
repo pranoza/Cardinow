@@ -8,7 +8,7 @@ import {
   Code, Link2, Trash, CheckSquare, Sparkles, HelpCircle, RefreshCw, Star, ArrowRight,
   Phone, Mail, Send, MessageCircle, ChevronLeft, MapPin, Instagram, Linkedin, Download, QrCode
 } from 'lucide-react';
-import { Card, Template, toUUID, getImageUrl, dbService } from '../../lib/directus';
+import { Card, Template, toUUID, getImageUrl, dbService, toJalaliDate } from '../../lib/directus';
 import { saveCardToContacts } from '../../lib/vcard';
 
 export interface CustomerCardsViewProps {
@@ -242,7 +242,7 @@ export function CustomerCardsView({
                       </span>
                     </div>
                     <p className="text-[10px] text-slate-400">
-                      شما دسترسی کامل به ابزارهای ساخت کارت و قالب‌ها دارید (اعتبار تا تاریخ: {userSub.end_date})
+                      شما دسترسی کامل به ابزارهای ساخت کارت و قالب‌ها دارید (اعتبار: از {toJalaliDate(userSub.start_date)} تا {toJalaliDate(userSub.end_date)})
                     </p>
                   </div>
                 </div>

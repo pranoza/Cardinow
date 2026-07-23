@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { 
-  dbService, authService, initializeDB, Card, Tenant, Template, Plan, Subscription, Transaction, UserSession, CardAnalytics, toUUID, sanitizeDbError, getImageUrl
+  dbService, authService, initializeDB, Card, Tenant, Template, Plan, Subscription, Transaction, UserSession, CardAnalytics, toUUID, sanitizeDbError, getImageUrl, toJalaliDate
 } from '../../lib/directus';
 import { 
   Plus, Edit2, Trash2, Globe, ExternalLink, Copy, Check, Eye, Save, Search, 
@@ -1125,7 +1125,7 @@ function DashboardContent() {
                     <CheckSquare className="h-3.5 w-3.5" />
                     اشتراک فعال: {userPlan?.title || 'طرح اختصاصی'}
                   </span>
-                  <span className="text-[10px] text-slate-400 block">تا تاریخ {userSub.end_date}</span>
+                  <span className="text-[10px] text-slate-400 block">اعتبار: از {toJalaliDate(userSub.start_date)} تا {toJalaliDate(userSub.end_date)}</span>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -1683,7 +1683,7 @@ function DashboardContent() {
                         <td className="p-3">علی علوی (u-1)</td>
                         <td className="p-3">{tx.gateway}</td>
                         <td className="p-3 font-mono">{tx.ref_id}</td>
-                        <td className="p-3 opacity-70">{tx.created_at ? tx.created_at.split('T')[0] : '-'}</td>
+                        <td className="p-3 opacity-70">{tx.created_at ? toJalaliDate(tx.created_at) : '-'}</td>
                         <td className="p-3 font-bold text-emerald-400">
                           {Math.round(tx.amount * 0.9).toLocaleString('fa-IR')} تومان (۹۰٪)
                         </td>
@@ -1780,7 +1780,7 @@ function DashboardContent() {
                             </span>
                           </td>
                           <td className="p-3 font-mono text-slate-200">{tx.ref_id}</td>
-                          <td className="p-3 opacity-70">{tx.created_at ? tx.created_at.split('T')[0] : '-'}</td>
+                          <td className="p-3 opacity-70">{tx.created_at ? toJalaliDate(tx.created_at) : '-'}</td>
                           <td className="p-3">
                             {tx.status === 'success' && (
                               <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 font-bold rounded-full text-[9px]">
